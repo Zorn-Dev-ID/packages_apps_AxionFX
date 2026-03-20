@@ -1,0 +1,273 @@
+/*
+ * Copyright 2025-2026 AxionOS
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.axion.axionfx.service
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
+import com.android.axion.axionfx.AxionFxActivity
+import com.android.axion.axionfx.R
+import com.android.axion.axionfx.AxionFxController
+import com.android.axion.platform.AxPlatformClient
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+class AxionFxService : Service() {
+
+    private lateinit var prefs: SharedPreferences
+    private var mediaOnlyMode = false
+
+    private val platformListener = object : AxPlatformClient.Listener() {
+        override fun onMediaStateChanged(
+            playing: Boolean, track: String, artist: String, packageName: String
+        ) {
+            if (!mediaOnlyMode) return
+            val wasPlaying = _mediaPlaying.value
+            if (playing == wasPlaying) return
+            _mediaPlaying.value = playing
+            if (playing) {
+                AxionFxController.attachSession(0)
+                AxionFxController.setMasterEnabled(true)
+                restoreSettings()
+                updateNotification(true)
+            } else {
+                AxionFxController.setMasterEnabled(false)
+                AxionFxController.releaseAll()
+                updateNotification(false)
+            }
+            Log.d(TAG, "Media-only: playing=$playing pkg=$packageName")
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, buildNotification())
+        AxionFxController.attachSession(0)
+        restoreSettings()
+        setupMediaOnlyMode()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_STOP -> {
+                AxionFxController.setMasterEnabled(false)
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return START_NOT_STICKY
+            }
+        }
+        val masterEnabled = prefs.getBoolean(KEY_MASTER_ENABLED, true)
+        val mediaOnly = prefs.getBoolean(KEY_MEDIA_ONLY, false)
+        if (!masterEnabled && !mediaOnly) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        instance = null
+        AxPlatformClient.getInstance().removeListener(platformListener)
+        AxionFxController.releaseAll()
+        super.onDestroy()
+    }
+
+    private fun setupMediaOnlyMode() {
+        mediaOnlyMode = prefs.getBoolean(KEY_MEDIA_ONLY, false)
+        if (mediaOnlyMode) {
+            val client = AxPlatformClient.getInstance()
+            client.init(this)
+            client.addListener(platformListener)
+            _mediaPlaying.value = client.isMediaPlaying
+            AxionFxController.setMasterEnabled(_mediaPlaying.value)
+            if (!_mediaPlaying.value) {
+                AxionFxController.releaseAll()
+                updateNotification(false)
+            }
+        }
+    }
+
+    fun updateMediaOnlyMode(enabled: Boolean) {
+        mediaOnlyMode = enabled
+        prefs.edit().putBoolean(KEY_MEDIA_ONLY, enabled).apply()
+        val client = AxPlatformClient.getInstance()
+        if (enabled) {
+            client.init(this)
+            client.addListener(platformListener)
+            _mediaPlaying.value = client.isMediaPlaying
+            AxionFxController.setMasterEnabled(_mediaPlaying.value)
+        } else {
+            client.removeListener(platformListener)
+            AxionFxController.setMasterEnabled(prefs.getBoolean(KEY_MASTER_ENABLED, true))
+        }
+    }
+
+    private fun restoreSettings() {
+        AxionFxController.setMasterEnabled(prefs.getBoolean(KEY_MASTER_ENABLED, true))
+        AxionFxController.setOutputGain(prefs.getInt(KEY_OUTPUT_GAIN, 100))
+        AxionFxController.setParameter(0x102, prefs.getInt("output_pan", 0))
+        AxionFxController.setEqEnabled(prefs.getBoolean(KEY_EQ_ENABLED, false))
+        for (i in 0..9) {
+            AxionFxController.setEqBandLevel(i, prefs.getInt("${KEY_EQ_BAND_PREFIX}$i", 0))
+        }
+        AxionFxController.setBassEnabled(prefs.getBoolean(KEY_BASS_ENABLED, false))
+        AxionFxController.setBassMode(prefs.getInt(KEY_BASS_MODE, 0))
+        AxionFxController.setBassGain(prefs.getInt(KEY_BASS_GAIN, 0))
+        AxionFxController.setWidenerEnabled(prefs.getBoolean(KEY_WIDENER_ENABLED, false))
+        AxionFxController.setWidenerWidth(prefs.getInt(KEY_WIDENER_WIDTH, 100))
+        AxionFxController.setLimiterEnabled(prefs.getBoolean(KEY_LIMITER_ENABLED, true))
+        AxionFxController.setParameter(0x501, prefs.getInt("limiter_threshold", -10))
+        AxionFxController.setReverbEnabled(prefs.getBoolean(KEY_REVERB_ENABLED, false))
+        AxionFxController.setReverbRoomSize(prefs.getInt(KEY_REVERB_ROOM, 50))
+        AxionFxController.setReverbWet(prefs.getInt(KEY_REVERB_WET, 30))
+        AxionFxController.setCompressorEnabled(prefs.getBoolean(KEY_COMPRESSOR_ENABLED, false))
+        AxionFxController.setTubeEnabled(prefs.getBoolean(KEY_TUBE_ENABLED, false))
+        AxionFxController.setTubeDrive(prefs.getInt(KEY_TUBE_DRIVE, 100))
+        AxionFxController.setTubeMix(prefs.getInt(KEY_TUBE_MIX, 50))
+        AxionFxController.setAgcEnabled(prefs.getBoolean(KEY_AGC_ENABLED, false))
+        AxionFxController.setCrossfeedEnabled(prefs.getBoolean(KEY_CROSSFEED_ENABLED, false))
+        AxionFxController.setCrossfeedLevel(prefs.getInt(KEY_CROSSFEED_LEVEL, 30))
+        AxionFxController.setSurroundEnabled(prefs.getBoolean(KEY_SURROUND_ENABLED, false))
+        AxionFxController.setParameter(0xB01, prefs.getInt("surround_delay", 1200))
+        AxionFxController.setParameter(0xB02, prefs.getInt("surround_width", 60))
+
+        AxionFxController.setExciterEnabled(prefs.getBoolean("exciter_enabled", false))
+        AxionFxController.setExciterDrive(prefs.getInt("exciter_drive", 50))
+        AxionFxController.setExciterBlend(prefs.getInt("exciter_blend", 30))
+        AxionFxController.setExciterFreq(prefs.getInt("exciter_freq", 3000))
+
+        AxionFxController.setMCompEnabled(prefs.getBoolean("mcomp_enabled", false))
+        for (i in 0..3) {
+            AxionFxController.setMCompBandThreshold(i, prefs.getInt("mcomp_thresh_$i", -200))
+            AxionFxController.setMCompBandRatio(i, prefs.getInt("mcomp_ratio_$i", 400))
+            AxionFxController.setMCompBandMakeup(i, prefs.getInt("mcomp_makeup_$i", 0))
+        }
+
+        AxionFxController.setFirEqEnabled(prefs.getBoolean("fir_eq_enabled", false))
+        for (i in 0..14) {
+            AxionFxController.setFirEqBandGain(i, prefs.getInt("fir_eq_band_$i", 0))
+        }
+
+        AxionFxController.setConvolverEnabled(prefs.getBoolean("convolver_enabled", false))
+        AxionFxController.setParameter(0xC01, prefs.getInt("convolver_mix", 100))
+
+        val spatialOn = prefs.getBoolean("spatial_enabled", false)
+        AxionFxController.setSpatialEnabled(spatialOn)
+        AxionFxController.setSpatialBlend(prefs.getInt("spatial_blend", 70))
+        AxionFxController.setParameter(0x1004, prefs.getInt("spatial_hrtf_profile", 0))
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID, getString(R.string.notification_channel),
+            NotificationManager.IMPORTANCE_LOW
+        )
+        channel.setShowBadge(false)
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    private fun buildNotification(active: Boolean = true): Notification {
+        val tapIntent = PendingIntent.getActivity(
+            this, 0,
+            Intent(this, AxionFxActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val title = if (active) getString(R.string.notification_title)
+            else getString(R.string.notification_title_idle)
+        val text = if (active) getString(R.string.notification_text)
+            else getString(R.string.notification_text_idle)
+        return Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setContentIntent(tapIntent)
+            .setOngoing(active)
+            .build()
+    }
+
+    private fun updateNotification(active: Boolean) {
+        val nm = getSystemService(NotificationManager::class.java)
+        nm.notify(NOTIFICATION_ID, buildNotification(active))
+    }
+
+    companion object {
+        private const val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "axionfx_processing"
+        const val PREFS_NAME = "axionfx_settings"
+
+        const val KEY_MASTER_ENABLED = "master_enabled"
+        const val KEY_EQ_ENABLED = "eq_enabled"
+        const val KEY_EQ_BAND_PREFIX = "eq_band_"
+        const val KEY_BASS_ENABLED = "bass_enabled"
+        const val KEY_BASS_MODE = "bass_mode"
+        const val KEY_BASS_GAIN = "bass_gain"
+        const val KEY_WIDENER_ENABLED = "widener_enabled"
+        const val KEY_WIDENER_WIDTH = "widener_width"
+        const val KEY_LIMITER_ENABLED = "limiter_enabled"
+        const val KEY_REVERB_ENABLED = "reverb_enabled"
+        const val KEY_REVERB_ROOM = "reverb_room"
+        const val KEY_REVERB_WET = "reverb_wet"
+        const val KEY_COMPRESSOR_ENABLED = "compressor_enabled"
+        const val KEY_TUBE_ENABLED = "tube_enabled"
+        const val KEY_TUBE_DRIVE = "tube_drive"
+        const val KEY_TUBE_MIX = "tube_mix"
+        const val KEY_AGC_ENABLED = "agc_enabled"
+        const val KEY_CROSSFEED_ENABLED = "crossfeed_enabled"
+        const val KEY_CROSSFEED_LEVEL = "crossfeed_level"
+        const val KEY_SURROUND_ENABLED = "surround_enabled"
+        const val KEY_OUTPUT_GAIN = "output_gain"
+        const val KEY_MEDIA_ONLY = "media_only_mode"
+        private const val TAG = "AxionFxService"
+
+        private const val ACTION_STOP = "com.android.axion.axionfx.STOP"
+        private var instance: AxionFxService? = null
+        private val _mediaPlaying = MutableStateFlow(false)
+        val mediaPlayingFlow: StateFlow<Boolean> = _mediaPlaying.asStateFlow()
+
+        fun start(context: Context) {
+            val prefs = getPrefs(context)
+            val masterEnabled = prefs.getBoolean(KEY_MASTER_ENABLED, true)
+            val mediaOnly = prefs.getBoolean(KEY_MEDIA_ONLY, false)
+            if (!masterEnabled && !mediaOnly) return
+            context.startForegroundService(Intent(context, AxionFxService::class.java))
+        }
+
+        fun stop(context: Context) {
+            val intent = Intent(context, AxionFxService::class.java)
+            intent.action = ACTION_STOP
+            context.startService(intent)
+        }
+
+        fun getPrefs(context: Context): SharedPreferences =
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+}
