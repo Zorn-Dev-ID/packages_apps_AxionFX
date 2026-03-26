@@ -20,38 +20,14 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Note head -->
     <path
-        android:pathData="M42,62 Q42,58 46,57 Q50,56 52,58 Q54,60 52,63 Q50,66 46,67 Q42,66 42,62 Z"
-        android:fillColor="#000000" />
-
-    <!-- Note stem -->
-    <path
-        android:pathData="M52,60 L52,34"
+        android:pathData="M36,34L36,74 M45,34L45,74 M54,34L54,74 M63,34L63,74 M72,34L72,74"
         android:strokeColor="#000000"
-        android:strokeWidth="2.5"
-        android:strokeLineCap="round"
-        android:fillColor="@android:color/transparent" />
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"/>
 
-    <!-- Note flag -->
     <path
-        android:pathData="M52,34 Q60,36 62,42 Q60,38 52,40"
-        android:fillColor="#000000" />
-
-    <!-- Sound arc 1 -->
-    <path
-        android:pathData="M58,44 Q64,48 64,54 Q64,60 58,64"
-        android:strokeColor="#000000"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:fillColor="@android:color/transparent" />
-
-    <!-- Sound arc 2 -->
-    <path
-        android:pathData="M63,39 Q72,45 72,54 Q72,63 63,69"
-        android:strokeColor="#000000"
-        android:strokeWidth="1.8"
-        android:strokeLineCap="round"
-        android:fillColor="@android:color/transparent" />
+        android:pathData="M36,60m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0 M45,38m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0 M54,48m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0 M63,56m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0 M72,42m-5,0a5,5 0 1 1 10,0a5,5 0 1 1 -10,0"
+        android:fillColor="#000000"/>
 
 </vector>

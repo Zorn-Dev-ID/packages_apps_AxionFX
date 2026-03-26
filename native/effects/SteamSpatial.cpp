@@ -24,8 +24,6 @@
 
 namespace axionfx {
 
-static constexpr float DEG_TO_RAD = M_PI / 180.0f;
-
 SteamSpatial::SteamSpatial()
     : mEnabled(false), mInitialized(false), mSampleRate(48000), mFrameSize(480),
       mWidth(100), mBlend(70), mAzimuth(0), mElevation(0), mHrtfProfile(0),
@@ -148,13 +146,7 @@ void SteamSpatial::teardown() {
 }
 
 void SteamSpatial::process(float* buffer, int frames) {
-    if (!mEnabled || frames <= 0) return;
-
-    if (!mInitialized) {
-        if (mInitFailed) return;
-        initSteamAudio();
-        if (!mInitialized) { mInitFailed = true; return; }
-    }
+    if (!mEnabled || !mInitialized || frames <= 0) return;
 
     float angle = 0.0f;
     float blend = static_cast<float>(mBlend) / 100.0f;
@@ -195,8 +187,12 @@ void SteamSpatial::process(float* buffer, int frames) {
 }
 
 void SteamSpatial::setEnabled(bool enabled) {
+    if (enabled && !mInitialized && !mInitFailed) {
+        initSteamAudio();
+        if (!mInitialized) { mInitFailed = true; }
+    }
     mEnabled = enabled;
-    mInitFailed = false;
+    if (!enabled) mInitFailed = false;
 }
 
 void SteamSpatial::setWidth(int percent) {
@@ -218,6 +214,10 @@ void SteamSpatial::setHrtfProfile(int profile) {
     if (mInitialized) {
         teardown();
         mInitFailed = false;
+        if (mEnabled) {
+            initSteamAudio();
+            if (!mInitialized) mInitFailed = true;
+        }
     }
 }
 

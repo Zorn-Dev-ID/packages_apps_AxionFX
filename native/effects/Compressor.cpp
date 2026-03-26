@@ -18,18 +18,36 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace axionfx {
 
 static constexpr float DB_FLOOR = -96.0f;
 
+static inline float fastLog2(float x) {
+    union { float f; uint32_t i; } u = {x};
+    float log2 = static_cast<float>((int)(u.i >> 23) - 127);
+    u.i = (u.i & 0x007FFFFFu) | 0x3F800000u;
+    log2 += u.f * (u.f * -0.3446825f + 1.3446825f) - 1.0f;
+    return log2;
+}
+
+static inline float fastExp2(float x) {
+    float xi = std::floor(x);
+    float xf = x - xi;
+    union { uint32_t i; float f; } u;
+    u.i = static_cast<uint32_t>((static_cast<int>(xi) + 127) << 23);
+    float poly = xf * (xf * 0.3446825f + 0.6553175f) + 1.0f;
+    return u.f * poly;
+}
+
 static float linearToDb(float linear) {
     if (linear < 1e-10f) return DB_FLOOR;
-    return 20.0f * std::log10(linear);
+    return 6.0205999f * fastLog2(linear);
 }
 
 static float dbToLinear(float dB) {
-    return std::pow(10.0f, dB / 20.0f);
+    return fastExp2(dB * 0.16609640f);
 }
 
 void Compressor::configure(float sampleRate) {

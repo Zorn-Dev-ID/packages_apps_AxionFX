@@ -17,18 +17,36 @@
 #include "MultibandCompressor.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 
 namespace axionfx {
 
 static constexpr float DB_FLOOR = -96.0f;
 
+static inline float fastLog2(float x) {
+    union { float f; uint32_t i; } u = {x};
+    float log2 = static_cast<float>((int)(u.i >> 23) - 127);
+    u.i = (u.i & 0x007FFFFFu) | 0x3F800000u;
+    log2 += u.f * (u.f * -0.3446825f + 1.3446825f) - 1.0f;
+    return log2;
+}
+
+static inline float fastExp2(float x) {
+    float xi = std::floor(x);
+    float xf = x - xi;
+    union { uint32_t i; float f; } u;
+    u.i = static_cast<uint32_t>((static_cast<int>(xi) + 127) << 23);
+    float poly = xf * (xf * 0.3446825f + 0.6553175f) + 1.0f;
+    return u.f * poly;
+}
+
 static inline float toDb(float linear) {
-    return (linear > 1e-10f) ? 20.0f * std::log10(linear) : DB_FLOOR;
+    return (linear > 1e-10f) ? 6.0205999f * fastLog2(linear) : DB_FLOOR;
 }
 
 static inline float fromDb(float dB) {
-    return std::pow(10.0f, dB / 20.0f);
+    return fastExp2(dB * 0.16609640f);
 }
 
 void MultibandCompressor::configure(float sampleRate) {
@@ -63,9 +81,15 @@ float MultibandCompressor::compressGain(const MCompBand& band, float inputDb) co
 void MultibandCompressor::process(float* buffer, int frames) {
     if (!mEnabled || frames <= 0) return;
 
-    float bandBufL[MCOMP_BANDS][frames];
-    float bandBufR[MCOMP_BANDS][frames];
+    int offset = 0;
+    while (offset < frames) {
+        int block = std::min(frames - offset, MAX_BLOCK_FRAMES);
+        processBlock(buffer + offset * 2, block);
+        offset += block;
+    }
+}
 
+void MultibandCompressor::processBlock(float* buffer, int frames) {
     for (int f = 0; f < frames; ++f) {
         float l = buffer[f * 2];
         float r = buffer[f * 2 + 1];
@@ -74,20 +98,20 @@ void MultibandCompressor::process(float* buffer, int frames) {
         float remainR = r;
 
         for (int b = 0; b < MCOMP_BANDS - 1; ++b) {
-            bandBufL[b][f] = mLowpassL[b].process(remainL);
-            bandBufR[b][f] = mLowpassR[b].process(remainR);
+            mBandBufL[b][f] = mLowpassL[b].process(remainL);
+            mBandBufR[b][f] = mLowpassR[b].process(remainR);
             remainL = mHighpassL[b].process(remainL);
             remainR = mHighpassR[b].process(remainR);
         }
-        bandBufL[MCOMP_BANDS - 1][f] = remainL;
-        bandBufR[MCOMP_BANDS - 1][f] = remainR;
+        mBandBufL[MCOMP_BANDS - 1][f] = remainL;
+        mBandBufR[MCOMP_BANDS - 1][f] = remainR;
     }
 
     for (int b = 0; b < MCOMP_BANDS; ++b) {
         auto& band = mBands[b];
         for (int f = 0; f < frames; ++f) {
-            float peakL = std::fabs(bandBufL[b][f]);
-            float peakR = std::fabs(bandBufR[b][f]);
+            float peakL = std::fabs(mBandBufL[b][f]);
+            float peakR = std::fabs(mBandBufR[b][f]);
             float peak = std::max(peakL, peakR);
             float peakDb = toDb(peak);
 
@@ -97,16 +121,16 @@ void MultibandCompressor::process(float* buffer, int frames) {
             float gainDb = compressGain(band, band.envelopeDb);
             float gainLinear = fromDb(gainDb) * band.makeupLinear;
 
-            bandBufL[b][f] *= gainLinear;
-            bandBufR[b][f] *= gainLinear;
+            mBandBufL[b][f] *= gainLinear;
+            mBandBufR[b][f] *= gainLinear;
         }
     }
 
     for (int f = 0; f < frames; ++f) {
         float l = 0.0f, r = 0.0f;
         for (int b = 0; b < MCOMP_BANDS; ++b) {
-            l += bandBufL[b][f];
-            r += bandBufR[b][f];
+            l += mBandBufL[b][f];
+            r += mBandBufR[b][f];
         }
         buffer[f * 2] = l;
         buffer[f * 2 + 1] = r;

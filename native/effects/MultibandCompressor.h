@@ -53,8 +53,11 @@ public:
     void reset();
 
 private:
+    static constexpr int MAX_BLOCK_FRAMES = 4096;
+
     void updateCoeffs(MCompBand& band);
     float compressGain(const MCompBand& band, float inputDb) const;
+    void processBlock(float* buffer, int frames);
 
     bool mEnabled = false;
     float mSampleRate = 48000.0f;
@@ -67,6 +70,9 @@ private:
     Biquad mHighpassR[MCOMP_BANDS - 1];
 
     MCompBand mBands[MCOMP_BANDS];
+
+    float mBandBufL[MCOMP_BANDS][MAX_BLOCK_FRAMES];
+    float mBandBufR[MCOMP_BANDS][MAX_BLOCK_FRAMES];
 };
 
 }  // namespace axionfx

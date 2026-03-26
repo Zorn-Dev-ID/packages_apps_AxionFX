@@ -17,10 +17,25 @@
 #include "AxionFxEngine.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include "dsp/WavLoader.h"
 
 namespace axionfx {
+
+static inline void enableFlushToZero() {
+#if defined(__aarch64__)
+    uint64_t fpcr;
+    __asm__ __volatile__("mrs %0, fpcr" : "=r"(fpcr));
+    fpcr |= (1 << 24);
+    __asm__ __volatile__("msr fpcr, %0" : : "r"(fpcr));
+#elif defined(__arm__)
+    uint32_t fpscr;
+    __asm__ __volatile__("vmrs %0, fpscr" : "=r"(fpscr));
+    fpscr |= (1 << 24);
+    __asm__ __volatile__("vmsr fpscr, %0" : : "r"(fpscr));
+#endif
+}
 
 void AxionFxEngine::configure(float sampleRate) {
     mSampleRate = sampleRate;
@@ -53,6 +68,8 @@ void AxionFxEngine::process(float* in, float* out, int samples) {
         std::memcpy(out, in, samples * sizeof(float));
     }
 
+    enableFlushToZero();
+
     int frames = samples / 2;
 
     mFirEq.process(out, frames);
@@ -71,13 +88,15 @@ void AxionFxEngine::process(float* in, float* out, int samples) {
     mAgc.process(out, frames);
 
     if (mOutputGain != 1.0f || mPanL != 1.0f || mPanR != 1.0f) {
+        float gainL = mOutputGain * mPanL;
+        float gainR = mOutputGain * mPanR;
         for (int f = 0; f < frames; ++f) {
-            float l = out[f * 2] * mOutputGain * mPanL;
-            float r = out[f * 2 + 1] * mOutputGain * mPanR;
-            if (l > 1.0f) l = 1.0f - 1.0f / (l + 1.0f);
-            else if (l < -1.0f) l = -(1.0f - 1.0f / (-l + 1.0f));
-            if (r > 1.0f) r = 1.0f - 1.0f / (r + 1.0f);
-            else if (r < -1.0f) r = -(1.0f - 1.0f / (-r + 1.0f));
+            float l = out[f * 2] * gainL;
+            float r = out[f * 2 + 1] * gainR;
+            if (l > 1.0f) { float x = l - 1.0f; l = 1.0f - x / (x + 1.0f); }
+            else if (l < -1.0f) { float x = -l - 1.0f; l = -(1.0f - x / (x + 1.0f)); }
+            if (r > 1.0f) { float x = r - 1.0f; r = 1.0f - x / (x + 1.0f); }
+            else if (r < -1.0f) { float x = -r - 1.0f; r = -(1.0f - x / (x + 1.0f)); }
             out[f * 2] = l;
             out[f * 2 + 1] = r;
         }

@@ -268,6 +268,7 @@ class AxionFxService : Service() {
         }
 
         fun getPrefs(context: Context): SharedPreferences =
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            context.createDeviceProtectedStorageContext()
+                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 }
