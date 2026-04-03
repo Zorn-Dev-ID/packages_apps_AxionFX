@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "AxionFxEngine"
+#include <log/log.h>
+
 #include "AxionFxEngine.h"
 
 #include <algorithm>
@@ -110,6 +113,7 @@ void AxionFxEngine::setMasterEnabled(bool enabled) {
 }
 
 void AxionFxEngine::setParameter(int32_t paramId, int32_t value) {
+    ALOGI("setParameter paramId=0x%x value=%d", paramId, value);
     switch (paramId) {
         case PARAM_MASTER_ENABLE:
             mMasterEnabled = (value != 0);
@@ -350,6 +354,7 @@ bool AxionFxEngine::loadIrFromFd(int fd, int64_t offset, int64_t length) {
     mConvolver.loadImpulseResponse(wav.samples.data(), wav.numFrames);
     return true;
 }
+
 
 int32_t AxionFxEngine::getParameter(int32_t paramId) const {
     switch (paramId) {

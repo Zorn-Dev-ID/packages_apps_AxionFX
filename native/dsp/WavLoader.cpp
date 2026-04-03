@@ -152,6 +152,109 @@ WavData loadWavFile(const std::string& path) {
     return result;
 }
 
+static WavDataMulti parseWavMulti(FILE* f, int maxChannels) {
+    WavDataMulti result;
+
+    WavHeader header;
+    if (fread(&header, sizeof(header), 1, f) != 1) return result;
+    if (std::memcmp(header.riffId, "RIFF", 4) != 0) return result;
+    if (std::memcmp(header.waveId, "WAVE", 4) != 0) return result;
+
+    FmtChunk fmt = {};
+    bool foundFmt = false;
+    bool foundData = false;
+    uint32_t dataSize = 0;
+
+    while (!foundData) {
+        ChunkHeader chunk;
+        if (fread(&chunk, sizeof(chunk), 1, f) != 1) break;
+
+        if (std::memcmp(chunk.id, "fmt ", 4) == 0) {
+            if (chunk.size < sizeof(FmtChunk)) break;
+            if (fread(&fmt, sizeof(FmtChunk), 1, f) != 1) break;
+            if (chunk.size > sizeof(FmtChunk)) {
+                fseek(f, chunk.size - sizeof(FmtChunk), SEEK_CUR);
+            }
+            foundFmt = true;
+        } else if (std::memcmp(chunk.id, "data", 4) == 0) {
+            dataSize = chunk.size;
+            foundData = true;
+        } else {
+            fseek(f, chunk.size, SEEK_CUR);
+        }
+    }
+
+    if (!foundFmt || !foundData) return result;
+    if (fmt.audioFormat != 1 && fmt.audioFormat != 3) return result;
+    if (fmt.numChannels < 1 || fmt.numChannels > maxChannels) return result;
+    if (fmt.bitsPerSample != 16 && fmt.bitsPerSample != 24 &&
+        fmt.bitsPerSample != 32) return result;
+
+    int bytesPerSample = fmt.bitsPerSample / 8;
+    int totalSamples = dataSize / bytesPerSample;
+    int numFrames = totalSamples / fmt.numChannels;
+
+    static constexpr int MAX_FRAMES = 48000 * 10;
+    if (numFrames > MAX_FRAMES) numFrames = MAX_FRAMES;
+
+    int totalOut = numFrames * fmt.numChannels;
+    result.samples.resize(totalOut);
+    result.sampleRate = fmt.sampleRate;
+    result.channels = fmt.numChannels;
+    result.numFrames = numFrames;
+
+    if (fmt.audioFormat == 3 && fmt.bitsPerSample == 32) {
+        fread(result.samples.data(), sizeof(float), totalOut, f);
+    } else if (fmt.bitsPerSample == 16) {
+        std::vector<int16_t> raw(totalOut);
+        fread(raw.data(), sizeof(int16_t), totalOut, f);
+        for (int i = 0; i < totalOut; ++i) {
+            result.samples[i] = static_cast<float>(raw[i]) / 32768.0f;
+        }
+    } else if (fmt.bitsPerSample == 24) {
+        std::vector<uint8_t> raw(totalOut * 3);
+        fread(raw.data(), 3, totalOut, f);
+        for (int i = 0; i < totalOut; ++i) {
+            int idx = i * 3;
+            int32_t val = (raw[idx] | (raw[idx + 1] << 8) | (raw[idx + 2] << 16));
+            if (val & 0x800000) val |= 0xFF000000;
+            result.samples[i] = static_cast<float>(val) / 8388608.0f;
+        }
+    } else if (fmt.bitsPerSample == 32 && fmt.audioFormat == 1) {
+        std::vector<int32_t> raw(totalOut);
+        fread(raw.data(), sizeof(int32_t), totalOut, f);
+        for (int i = 0; i < totalOut; ++i) {
+            result.samples[i] = static_cast<float>(raw[i]) / 2147483648.0f;
+        }
+    }
+
+    result.valid = true;
+    return result;
+}
+
+WavDataMulti loadWavFileMulti(const std::string& path, int maxChannels) {
+    FILE* f = fopen(path.c_str(), "rb");
+    if (!f) return {};
+    auto result = parseWavMulti(f, maxChannels);
+    fclose(f);
+    return result;
+}
+
+WavDataMulti loadWavFromFdMulti(int fd, int64_t offset, int64_t length, int maxChannels) {
+    (void)length;
+    int dupFd = dup(fd);
+    if (dupFd < 0) return {};
+    FILE* f = fdopen(dupFd, "rb");
+    if (!f) {
+        close(dupFd);
+        return {};
+    }
+    if (offset > 0) fseek(f, offset, SEEK_SET);
+    auto result = parseWavMulti(f, maxChannels);
+    fclose(f);
+    return result;
+}
+
 WavData loadWavFromFd(int fd, int64_t offset, int64_t length) {
     (void)length;
     int dupFd = dup(fd);

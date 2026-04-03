@@ -120,6 +120,9 @@ void Compressor::process(float* buffer, int frames) {
 }
 
 void Compressor::setEnabled(bool enabled) {
+    if (enabled && !mEnabled) {
+        mEnvelopeDb = mThresholdDb;
+    }
     mEnabled = enabled;
 }
 

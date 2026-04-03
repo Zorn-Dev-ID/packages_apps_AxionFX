@@ -69,11 +69,15 @@ void AutoGainControl::process(float* buffer, int frames) {
 }
 
 void AutoGainControl::setEnabled(bool enabled) {
+    if (enabled && !mEnabled) {
+        mEnvelope = mTargetLevel;
+        mGain = 1.0f;
+    }
     mEnabled = enabled;
 }
 
 void AutoGainControl::reset() {
-    mEnvelope = 0.0f;
+    mEnvelope = mTargetLevel;
     mGain = 1.0f;
 }
 

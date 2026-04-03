@@ -130,6 +130,19 @@ object AxionFxController {
 
     fun setConvolverEnabled(enabled: Boolean) = setParameter(0xC00, if (enabled) 1 else 0)
 
+    fun loadConvolverIr(path: String) {
+        val paramBytes = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(0xC02).array()
+        val pathBytes = path.toByteArray(Charsets.UTF_8)
+        sessions.values.forEach { effect ->
+            try {
+                effect.setParameter(paramBytes, pathBytes)
+                Log.d(TAG, "loadConvolverIr: $path")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load IR: $path", e)
+            }
+        }
+    }
+
     fun setMCompEnabled(enabled: Boolean) = setParameter(0xD00, if (enabled) 1 else 0)
     fun setMCompBandThreshold(band: Int, tenthsDb: Int) =
         setParameter(0xD01, (band shl 16) or (tenthsDb and 0xFFFF))

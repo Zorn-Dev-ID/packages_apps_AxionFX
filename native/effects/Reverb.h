@@ -45,7 +45,7 @@ private:
     float mRoomSize = 0.5f;
     float mDamping = 0.5f;
     float mWetLevel = 0.3f;
-    float mDryLevel = 0.7f;
+    float mDryLevel = 1.0f;
     float mWidth = 1.0f;
 
     float mFeedback = 0.0f;

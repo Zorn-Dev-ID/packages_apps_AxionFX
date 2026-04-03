@@ -4,6 +4,8 @@ package com.android.axion.axionfx.ui.screens
 
 import com.android.axion.axionfx.ui.AxionFxViewModel
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,13 +23,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import com.android.axion.axionfx.R
-import com.android.axion.axionfx.domain.EffectKeys
 import com.android.axion.axionfx.ui.components.EffectSlider
 import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
+import java.io.File
 
 private const val KEY_CONVOLVER_ENABLED = "convolver_enabled"
 private const val KEY_CONVOLVER_MIX = "convolver_mix"
@@ -37,9 +40,25 @@ private const val KEY_CONVOLVER_IR_PATH = "convolver_ir_path"
 fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
     BackHandler(onBack = onBackClick)
 
+    val context = LocalContext.current
     var enabled by remember { mutableStateOf(viewModel.loadBoolean(KEY_CONVOLVER_ENABLED, false)) }
     var mix by remember { mutableFloatStateOf(viewModel.loadInt(KEY_CONVOLVER_MIX, 100).toFloat()) }
     val irPath = remember { mutableStateOf(viewModel.repo.getString(KEY_CONVOLVER_IR_PATH, null)) }
+
+    val irLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val irDir = File(context.filesDir, "convolver")
+        irDir.mkdirs()
+        val destFile = File(irDir, "ir.wav")
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output -> input.copyTo(output) }
+            }
+            val path = destFile.absolutePath
+            irPath.value = path
+            viewModel.interactor.loadConvolverIr(path)
+        } catch (_: Exception) {}
+    }
 
     AxionScaffold(title = stringResource(R.string.convolver_screen_title), onBackClick = onBackClick) { innerPadding ->
         Column(
@@ -67,7 +86,7 @@ fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                         title = stringResource(R.string.convolver_load_ir),
                         summary = irPath.value ?: stringResource(R.string.convolver_no_ir),
                         onClick = {
-                            // TODO: file picker integration
+                            irLauncher.launch(arrayOf("audio/x-wav", "audio/*", "*/*"))
                         },
                         enabled = enabled,
                     )

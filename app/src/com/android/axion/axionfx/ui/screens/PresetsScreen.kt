@@ -44,7 +44,7 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
     BackHandler(onBack = onBackClick)
 
     val context = LocalContext.current
-    var presetNames by remember { mutableStateOf(PresetManager.listPresets()) }
+    var presetNames by remember { mutableStateOf(PresetManager.listPresets(context)) }
 
     AxionScaffold(title = stringResource(R.string.presets_screen_title), onBackClick = onBackClick) { innerPadding ->
         Column(
@@ -63,8 +63,8 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                 FilledTonalButton(
                     onClick = {
                         val name = "Preset ${presetNames.size + 1}"
-                        PresetManager.savePreset(name, viewModel.repo.prefs)
-                        presetNames = PresetManager.listPresets()
+                        PresetManager.savePreset(context, name, viewModel.repo.prefs)
+                        presetNames = PresetManager.listPresets(context)
                     },
                     modifier = Modifier.weight(1f),
                 ) {
@@ -84,7 +84,7 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                             summary = stringResource(R.string.presets_tap_to_load),
                             onClick = {
                                 PresetManager.loadBuiltinPreset(name, viewModel.repo.prefs)
-                                AxionFxService.start(context)
+                                AxionFxService.instance?.restoreSettings()
                                 Toast.makeText(context, context.getString(R.string.preset_loaded, name), Toast.LENGTH_SHORT).show()
                             },
                         )
@@ -102,9 +102,13 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                                 title = name,
                                 summary = stringResource(R.string.presets_tap_to_load),
                                 onClick = {
-                                    PresetManager.loadPreset(name, viewModel.repo.prefs)
-                                    AxionFxService.start(context)
+                                    PresetManager.loadPreset(context, name, viewModel.repo.prefs)
+                                    AxionFxService.instance?.restoreSettings()
                                     Toast.makeText(context, context.getString(R.string.preset_loaded, name), Toast.LENGTH_SHORT).show()
+                                },
+                                onLongClick = {
+                                    PresetManager.deletePreset(context, name)
+                                    presetNames = PresetManager.listPresets(context)
                                 },
                             )
                         }

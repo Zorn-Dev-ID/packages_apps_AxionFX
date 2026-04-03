@@ -131,59 +131,70 @@ class AxionFxService : Service() {
         }
     }
 
-    private fun restoreSettings() {
-        AxionFxController.setMasterEnabled(prefs.getBoolean(KEY_MASTER_ENABLED, true))
+    internal fun restoreSettings() {
         AxionFxController.setOutputGain(prefs.getInt(KEY_OUTPUT_GAIN, 100))
         AxionFxController.setParameter(0x102, prefs.getInt("output_pan", 0))
-        AxionFxController.setEqEnabled(prefs.getBoolean(KEY_EQ_ENABLED, false))
+
         for (i in 0..9) {
             AxionFxController.setEqBandLevel(i, prefs.getInt("${KEY_EQ_BAND_PREFIX}$i", 0))
         }
-        AxionFxController.setBassEnabled(prefs.getBoolean(KEY_BASS_ENABLED, false))
+        AxionFxController.setEqEnabled(prefs.getBoolean(KEY_EQ_ENABLED, false))
+
         AxionFxController.setBassMode(prefs.getInt(KEY_BASS_MODE, 0))
         AxionFxController.setBassGain(prefs.getInt(KEY_BASS_GAIN, 0))
-        AxionFxController.setWidenerEnabled(prefs.getBoolean(KEY_WIDENER_ENABLED, false))
+        AxionFxController.setBassEnabled(prefs.getBoolean(KEY_BASS_ENABLED, false))
+
         AxionFxController.setWidenerWidth(prefs.getInt(KEY_WIDENER_WIDTH, 100))
-        AxionFxController.setLimiterEnabled(prefs.getBoolean(KEY_LIMITER_ENABLED, true))
+        AxionFxController.setWidenerEnabled(prefs.getBoolean(KEY_WIDENER_ENABLED, false))
+
         AxionFxController.setParameter(0x501, prefs.getInt("limiter_threshold", -10))
-        AxionFxController.setReverbEnabled(prefs.getBoolean(KEY_REVERB_ENABLED, false))
+        AxionFxController.setLimiterEnabled(prefs.getBoolean(KEY_LIMITER_ENABLED, true))
+
         AxionFxController.setReverbRoomSize(prefs.getInt(KEY_REVERB_ROOM, 50))
         AxionFxController.setReverbWet(prefs.getInt(KEY_REVERB_WET, 30))
+        AxionFxController.setReverbEnabled(prefs.getBoolean(KEY_REVERB_ENABLED, false))
+
         AxionFxController.setCompressorEnabled(prefs.getBoolean(KEY_COMPRESSOR_ENABLED, false))
-        AxionFxController.setTubeEnabled(prefs.getBoolean(KEY_TUBE_ENABLED, false))
+
         AxionFxController.setTubeDrive(prefs.getInt(KEY_TUBE_DRIVE, 100))
         AxionFxController.setTubeMix(prefs.getInt(KEY_TUBE_MIX, 50))
+        AxionFxController.setTubeEnabled(prefs.getBoolean(KEY_TUBE_ENABLED, false))
+
         AxionFxController.setAgcEnabled(prefs.getBoolean(KEY_AGC_ENABLED, false))
-        AxionFxController.setCrossfeedEnabled(prefs.getBoolean(KEY_CROSSFEED_ENABLED, false))
+
         AxionFxController.setCrossfeedLevel(prefs.getInt(KEY_CROSSFEED_LEVEL, 30))
-        AxionFxController.setSurroundEnabled(prefs.getBoolean(KEY_SURROUND_ENABLED, false))
+        AxionFxController.setCrossfeedEnabled(prefs.getBoolean(KEY_CROSSFEED_ENABLED, false))
+
         AxionFxController.setParameter(0xB01, prefs.getInt("surround_delay", 1200))
         AxionFxController.setParameter(0xB02, prefs.getInt("surround_width", 60))
+        AxionFxController.setSurroundEnabled(prefs.getBoolean(KEY_SURROUND_ENABLED, false))
 
-        AxionFxController.setExciterEnabled(prefs.getBoolean("exciter_enabled", false))
         AxionFxController.setExciterDrive(prefs.getInt("exciter_drive", 50))
         AxionFxController.setExciterBlend(prefs.getInt("exciter_blend", 30))
         AxionFxController.setExciterFreq(prefs.getInt("exciter_freq", 3000))
+        AxionFxController.setExciterEnabled(prefs.getBoolean("exciter_enabled", false))
 
-        AxionFxController.setMCompEnabled(prefs.getBoolean("mcomp_enabled", false))
         for (i in 0..3) {
             AxionFxController.setMCompBandThreshold(i, prefs.getInt("mcomp_thresh_$i", -200))
             AxionFxController.setMCompBandRatio(i, prefs.getInt("mcomp_ratio_$i", 400))
             AxionFxController.setMCompBandMakeup(i, prefs.getInt("mcomp_makeup_$i", 0))
         }
+        AxionFxController.setMCompEnabled(prefs.getBoolean("mcomp_enabled", false))
 
-        AxionFxController.setFirEqEnabled(prefs.getBoolean("fir_eq_enabled", false))
         for (i in 0..14) {
             AxionFxController.setFirEqBandGain(i, prefs.getInt("fir_eq_band_$i", 0))
         }
+        AxionFxController.setFirEqEnabled(prefs.getBoolean("fir_eq_enabled", false))
 
-        AxionFxController.setConvolverEnabled(prefs.getBoolean("convolver_enabled", false))
         AxionFxController.setParameter(0xC01, prefs.getInt("convolver_mix", 100))
+        prefs.getString("convolver_ir_path", null)?.let { AxionFxController.loadConvolverIr(it) }
+        AxionFxController.setConvolverEnabled(prefs.getBoolean("convolver_enabled", false))
 
-        val spatialOn = prefs.getBoolean("spatial_enabled", false)
-        AxionFxController.setSpatialEnabled(spatialOn)
         AxionFxController.setSpatialBlend(prefs.getInt("spatial_blend", 70))
         AxionFxController.setParameter(0x1004, prefs.getInt("spatial_hrtf_profile", 0))
+        AxionFxController.setSpatialEnabled(prefs.getBoolean("spatial_enabled", false))
+
+        AxionFxController.setMasterEnabled(prefs.getBoolean(KEY_MASTER_ENABLED, true))
     }
 
     private fun createNotificationChannel() {
@@ -249,7 +260,7 @@ class AxionFxService : Service() {
         private const val TAG = "AxionFxService"
 
         private const val ACTION_STOP = "com.android.axion.axionfx.STOP"
-        private var instance: AxionFxService? = null
+        internal var instance: AxionFxService? = null
         private val _mediaPlaying = MutableStateFlow(false)
         val mediaPlayingFlow: StateFlow<Boolean> = _mediaPlaying.asStateFlow()
 

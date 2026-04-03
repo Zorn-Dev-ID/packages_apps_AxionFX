@@ -30,7 +30,18 @@ struct WavData {
     bool valid = false;
 };
 
+struct WavDataMulti {
+    std::vector<float> samples;
+    int sampleRate = 0;
+    int channels = 0;
+    int numFrames = 0;
+    bool valid = false;
+};
+
 WavData loadWavFile(const std::string& path);
 WavData loadWavFromFd(int fd, int64_t offset, int64_t length);
+
+WavDataMulti loadWavFileMulti(const std::string& path, int maxChannels = 16);
+WavDataMulti loadWavFromFdMulti(int fd, int64_t offset, int64_t length, int maxChannels = 16);
 
 }  // namespace axionfx

@@ -148,13 +148,14 @@ void SteamSpatial::teardown() {
 void SteamSpatial::process(float* buffer, int frames) {
     if (!mEnabled || !mInitialized || frames <= 0) return;
 
-    float angle = 0.0f;
+    float azRad = mAzimuth * (M_PI / 180.0f);
+    float elRad = mElevation * (M_PI / 180.0f);
     float blend = static_cast<float>(mBlend) / 100.0f;
 
     IPLVector3 direction{
-        std::sin(angle),
-        0.0f,
-        -std::cos(angle)
+        std::cos(elRad) * std::sin(azRad),
+        std::sin(elRad),
+        -std::cos(elRad) * std::cos(azRad)
     };
 
     int remaining = frames;

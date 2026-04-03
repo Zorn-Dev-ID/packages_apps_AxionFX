@@ -22,7 +22,7 @@ namespace axionfx {
 
 class DiffSurround {
 public:
-    static constexpr float MAX_DELAY_MS = 40.0f;
+    static constexpr float MAX_DELAY_MS = 50.0f;
 
     void configure(float sampleRate);
     void setDelay(float ms);
@@ -35,16 +35,15 @@ public:
 private:
     bool mEnabled = false;
     float mSampleRate = 48000.0f;
-    float mDelayMs = 12.0f;
+    float mDelayMs = 20.0f;
     float mWidth = 0.6f;
-    int mDelaySamples = 0;
 
-    float mHpStateL = 0.0f;
-    float mHpStateR = 0.0f;
-    float mHpCoeff = 0.0f;
+    int mDelayMidL = 0;
+    int mDelayMidR = 0;
+    int mDelaySide1 = 0;
 
-    DelayLine mDelayL;
-    DelayLine mDelayR;
+    DelayLine mMidLine;
+    DelayLine mSideLine;
 };
 
 }  // namespace axionfx

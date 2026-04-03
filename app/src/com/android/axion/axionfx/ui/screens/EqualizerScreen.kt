@@ -527,7 +527,7 @@ private fun EqBandSlider(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "${(value / 100f).toInt()}",
+            text = "%.1f".format(value / 100f),
             style = MaterialTheme.typography.labelSmall,
             color = if (enabled) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.outline,

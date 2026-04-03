@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <memory>
 
 #include <aidl/android/hardware/audio/effect/DefaultExtension.h>
@@ -83,11 +84,31 @@ AxionFxContext::AxionFxContext(int statusDepth, const Parameter::Common& common)
 }
 
 RetCode AxionFxContext::setParams(const std::vector<uint8_t>& params) {
+    if (params.size() < sizeof(int32_t)) {
+        LOG(ERROR) << "setParams: too small " << params.size();
+        return RetCode::ERROR_ILLEGAL_PARAMETER;
+    }
+
+    int32_t paramId = *reinterpret_cast<const int32_t*>(params.data());
+
+    if (paramId == axionfx::PARAM_CONVOLVER_LOAD_IR) {
+        if (params.size() > sizeof(int32_t)) {
+            const char* pathData = reinterpret_cast<const char*>(params.data() + sizeof(int32_t));
+            size_t pathLen = params.size() - sizeof(int32_t);
+            std::string path(pathData, strnlen(pathData, pathLen));
+            mEngine.loadIrFromPath(path.c_str());
+        }
+        mLastParams = params;
+        return RetCode::SUCCESS;
+    }
+
     if (params.size() < sizeof(axionfx::AxionFxParam)) {
+        LOG(ERROR) << "setParams: too small " << params.size();
         return RetCode::ERROR_ILLEGAL_PARAMETER;
     }
 
     const auto* param = reinterpret_cast<const axionfx::AxionFxParam*>(params.data());
+    LOG(INFO) << "setParams paramId=" << param->paramId << " value=" << param->value;
     mEngine.setParameter(param->paramId, param->value);
     mLastParams = params;
     return RetCode::SUCCESS;

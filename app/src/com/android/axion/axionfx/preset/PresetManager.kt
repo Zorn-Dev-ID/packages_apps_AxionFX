@@ -16,6 +16,7 @@
 
 package com.android.axion.axionfx.preset
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import org.json.JSONObject
@@ -24,7 +25,8 @@ import java.io.File
 object PresetManager {
 
     private const val TAG = "AxionFxPreset"
-    private val PRESETS_DIR = File("/data/system/axionfx/presets")
+
+    private fun presetsDir(context: Context) = File(context.filesDir, "presets")
 
     private val PERSISTED_KEYS = listOf(
         "master_enabled", "output_gain",
@@ -51,8 +53,9 @@ object PresetManager {
         "mcomp_makeup_" to 4,
     )
 
-    fun savePreset(name: String, prefs: SharedPreferences) {
-        PRESETS_DIR.mkdirs()
+    fun savePreset(context: Context, name: String, prefs: SharedPreferences) {
+        val dir = presetsDir(context)
+        dir.mkdirs()
         val json = JSONObject()
 
         for (key in PERSISTED_KEYS) {
@@ -76,13 +79,13 @@ object PresetManager {
             }
         }
 
-        val file = File(PRESETS_DIR, "${sanitizeName(name)}.json")
+        val file = File(dir, "${sanitizeName(name)}.json")
         file.writeText(json.toString(2))
         Log.d(TAG, "Saved preset: $name -> ${file.absolutePath}")
     }
 
-    fun loadPreset(name: String, prefs: SharedPreferences) {
-        val file = File(PRESETS_DIR, "${sanitizeName(name)}.json")
+    fun loadPreset(context: Context, name: String, prefs: SharedPreferences) {
+        val file = File(presetsDir(context), "${sanitizeName(name)}.json")
         if (!file.exists()) return
 
         val json = JSONObject(file.readText())
@@ -166,29 +169,30 @@ object PresetManager {
         Log.d(TAG, "Loaded builtin preset: $name")
     }
 
-    fun deletePreset(name: String) {
-        val file = File(PRESETS_DIR, "${sanitizeName(name)}.json")
+    fun deletePreset(context: Context, name: String) {
+        val file = File(presetsDir(context), "${sanitizeName(name)}.json")
         if (file.exists()) file.delete()
     }
 
-    fun listPresets(): List<String> {
-        if (!PRESETS_DIR.exists()) return emptyList()
-        return PRESETS_DIR.listFiles()
+    fun listPresets(context: Context): List<String> {
+        val dir = presetsDir(context)
+        if (!dir.exists()) return emptyList()
+        return dir.listFiles()
             ?.filter { it.extension == "json" }
             ?.map { it.nameWithoutExtension }
             ?.sorted()
             ?: emptyList()
     }
 
-    fun exportPreset(name: String): String? {
-        val file = File(PRESETS_DIR, "${sanitizeName(name)}.json")
+    fun exportPreset(context: Context, name: String): String? {
+        val file = File(presetsDir(context), "${sanitizeName(name)}.json")
         return if (file.exists()) file.readText() else null
     }
 
-    fun importPreset(name: String, json: String) {
-        PRESETS_DIR.mkdirs()
-        val file = File(PRESETS_DIR, "${sanitizeName(name)}.json")
-        file.writeText(json)
+    fun importPreset(context: Context, name: String, json: String) {
+        val dir = presetsDir(context)
+        dir.mkdirs()
+        File(dir, "${sanitizeName(name)}.json").writeText(json)
     }
 
     private fun sanitizeName(name: String): String =

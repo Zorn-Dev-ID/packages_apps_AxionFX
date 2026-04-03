@@ -37,7 +37,7 @@ private:
     float mMaxGain = 10.0f;
     float mAttackCoeff = 0.0f;
     float mReleaseCoeff = 0.0f;
-    float mEnvelope = 0.0f;
+    float mEnvelope = 0.5f;
     float mGain = 1.0f;
 };
 

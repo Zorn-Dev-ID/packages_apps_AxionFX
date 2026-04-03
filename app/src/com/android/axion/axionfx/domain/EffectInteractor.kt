@@ -221,6 +221,11 @@ class EffectInteractor(private val repo: EffectRepository) {
         repo.putInt(EffectKeys.CONVOLVER_MIX, mix)
     }
 
+    fun loadConvolverIr(path: String) {
+        AxionFxController.loadConvolverIr(path)
+        repo.putString(EffectKeys.CONVOLVER_IR_PATH, path)
+    }
+
     fun resetAll() {
         repo.clear()
         setMasterEnabled(EffectDefaults.MASTER_ENABLED)

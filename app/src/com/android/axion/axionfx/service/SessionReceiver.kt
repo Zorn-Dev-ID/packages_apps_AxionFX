@@ -31,6 +31,7 @@ class SessionReceiver : BroadcastReceiver() {
             AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION -> {
                 AxionFxService.start(context)
                 AxionFxController.attachSession(sessionId)
+                AxionFxService.instance?.restoreSettings()
             }
             AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION -> {
                 AxionFxController.detachSession(sessionId)
