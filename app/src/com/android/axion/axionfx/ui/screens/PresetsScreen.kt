@@ -3,24 +3,20 @@
 package com.android.axion.axionfx.ui.screens
 
 import android.content.Intent
-import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +32,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,10 +58,10 @@ import com.android.axion.axionfx.R
 import com.android.axion.axionfx.preset.PresetManager
 import com.android.axion.axionfx.service.AxionFxService
 import com.android.axion.axionfx.ui.AxionFxViewModel
+import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.scaffold.AxionScaffold
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -208,32 +203,28 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                FilledTonalButton(
-                    onClick = { importLauncher.launch(arrayOf("application/json")) },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Rounded.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.presets_import))
+            PreferenceGroup {
+                item {
+                    ClickablePreference(
+                        title = stringResource(R.string.presets_import),
+                        summary = stringResource(R.string.convolver_formats),
+                        icon = Icons.Rounded.FileUpload,
+                        onClick = { importLauncher.launch(arrayOf("application/json")) },
+                    )
                 }
-                
-                FilledTonalButton(
-                    onClick = { showSaveDialog = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.presets_save))
+                item {
+                    ClickablePreference(
+                        title = stringResource(R.string.presets_save),
+                        summary = stringResource(R.string.presets_save_title),
+                        icon = Icons.Rounded.Save,
+                        onClick = { showSaveDialog = true },
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             PreferenceGroup(title = stringResource(R.string.presets_builtin_title)) {
                 PresetManager.listBuiltinPresets().forEach { name ->
@@ -277,20 +268,24 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                                     exportLauncher.launch("$name.json")
                                 },
                                 onShare = {
-                                    val file = PresetManager.getPresetFile(context, name)
-                                    if (file.exists()) {
-                                        val uri = FileProvider.getUriForFile(
-                                            context,
-                                            "com.android.axion.axionfx.fileprovider",
-                                            file
-                                        )
-                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                            type = "application/json"
-                                            putExtra(Intent.EXTRA_STREAM, uri)
-                                            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.presets_share_subject, name))
-                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    try {
+                                        val file = PresetManager.getPresetFile(context, name)
+                                        if (file.exists()) {
+                                            val uri = FileProvider.getUriForFile(
+                                                context,
+                                                "com.android.axion.axionfx.fileprovider",
+                                                file
+                                            )
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "application/json"
+                                                putExtra(Intent.EXTRA_STREAM, uri)
+                                                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.presets_share_subject, name))
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.presets_share)))
                                         }
-                                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.presets_share)))
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Share failed: ${e.message}", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             )
