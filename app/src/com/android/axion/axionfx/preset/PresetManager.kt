@@ -19,6 +19,7 @@ package com.android.axion.axionfx.preset
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.android.axion.axionfx.domain.EffectKeys
 import org.json.JSONObject
 import java.io.File
 
@@ -29,28 +30,51 @@ object PresetManager {
     private fun presetsDir(context: Context) = File(context.filesDir, "presets")
 
     private val PERSISTED_KEYS = listOf(
-        "master_enabled", "output_gain",
-        "eq_enabled", "bass_enabled", "bass_mode", "bass_gain",
-        "widener_enabled", "widener_width",
-        "limiter_enabled",
-        "reverb_enabled", "reverb_room", "reverb_wet",
-        "compressor_enabled",
-        "tube_enabled", "tube_drive", "tube_mix",
-        "agc_enabled",
-        "crossfeed_enabled", "crossfeed_level",
-        "surround_enabled",
-        "exciter_enabled", "exciter_drive", "exciter_blend", "exciter_freq",
-        "mcomp_enabled",
-        "fir_eq_enabled",
-        "convolver_enabled", "convolver_mix",
+        EffectKeys.MASTER_ENABLED,
+        EffectKeys.OUTPUT_GAIN,
+        EffectKeys.OUTPUT_PAN,
+        EffectKeys.MEDIA_ONLY,
+        EffectKeys.EQ_ENABLED,
+        EffectKeys.FIR_EQ_ENABLED,
+        EffectKeys.BASS_ENABLED,
+        EffectKeys.BASS_MODE,
+        EffectKeys.BASS_GAIN,
+        EffectKeys.WIDENER_ENABLED,
+        EffectKeys.WIDENER_WIDTH,
+        EffectKeys.CROSSFEED_ENABLED,
+        EffectKeys.CROSSFEED_LEVEL,
+        EffectKeys.SURROUND_ENABLED,
+        EffectKeys.SURROUND_DELAY,
+        EffectKeys.SURROUND_WIDTH,
+        EffectKeys.SPATIAL_ENABLED,
+        EffectKeys.SPATIAL_WIDTH,
+        EffectKeys.SPATIAL_BLEND,
+        EffectKeys.COMPRESSOR_ENABLED,
+        EffectKeys.AGC_ENABLED,
+        EffectKeys.LIMITER_ENABLED,
+        EffectKeys.LIMITER_THRESHOLD,
+        EffectKeys.REVERB_ENABLED,
+        EffectKeys.REVERB_ROOM,
+        EffectKeys.REVERB_WET,
+        EffectKeys.TUBE_ENABLED,
+        EffectKeys.TUBE_DRIVE,
+        EffectKeys.TUBE_MIX,
+        EffectKeys.EXCITER_ENABLED,
+        EffectKeys.EXCITER_DRIVE,
+        EffectKeys.EXCITER_BLEND,
+        EffectKeys.EXCITER_FREQ,
+        EffectKeys.MCOMP_ENABLED,
+        EffectKeys.CONVOLVER_ENABLED,
+        EffectKeys.CONVOLVER_MIX,
+        EffectKeys.CONVOLVER_IR_PATH,
     )
 
     private val BAND_KEY_PREFIXES = listOf(
-        "eq_band_" to 10,
-        "fir_eq_band_" to 15,
-        "mcomp_thresh_" to 4,
-        "mcomp_ratio_" to 4,
-        "mcomp_makeup_" to 4,
+        EffectKeys.EQ_BAND_PREFIX to 10,
+        EffectKeys.FIR_EQ_BAND_PREFIX to 128,
+        EffectKeys.MCOMP_THRESH_PREFIX to 4,
+        EffectKeys.MCOMP_RATIO_PREFIX to 4,
+        EffectKeys.MCOMP_MAKEUP_PREFIX to 4,
     )
 
     fun savePreset(context: Context, name: String, prefs: SharedPreferences) {
@@ -87,8 +111,12 @@ object PresetManager {
     fun loadPreset(context: Context, name: String, prefs: SharedPreferences) {
         val file = File(presetsDir(context), "${sanitizeName(name)}.json")
         if (!file.exists()) return
+        loadPresetFromJson(file.readText(), prefs)
+        Log.d(TAG, "Loaded preset: $name")
+    }
 
-        val json = JSONObject(file.readText())
+    fun loadPresetFromJson(jsonString: String, prefs: SharedPreferences) {
+        val json = JSONObject(jsonString)
         val editor = prefs.edit()
 
         for (key in json.keys()) {
@@ -102,53 +130,56 @@ object PresetManager {
         }
 
         editor.apply()
-        Log.d(TAG, "Loaded preset: $name")
     }
 
     private val BUILTIN_PRESETS = mapOf(
         "Clarity" to mapOf(
-            "eq_enabled" to true,
-            "eq_band_6" to 150, "eq_band_7" to 200, "eq_band_8" to 250, "eq_band_9" to 150,
-            "exciter_enabled" to true,
-            "exciter_drive" to 40, "exciter_blend" to 25, "exciter_freq" to 4000,
-            "compressor_enabled" to true,
-            "limiter_enabled" to true,
-            "output_gain" to 100,
+            EffectKeys.EQ_ENABLED to true,
+            "${EffectKeys.EQ_BAND_PREFIX}6" to 150, "${EffectKeys.EQ_BAND_PREFIX}7" to 200, 
+            "${EffectKeys.EQ_BAND_PREFIX}8" to 250, "${EffectKeys.EQ_BAND_PREFIX}9" to 150,
+            EffectKeys.EXCITER_ENABLED to true,
+            EffectKeys.EXCITER_DRIVE to 40, EffectKeys.EXCITER_BLEND to 25, EffectKeys.EXCITER_FREQ to 4000,
+            EffectKeys.COMPRESSOR_ENABLED to true,
+            EffectKeys.LIMITER_ENABLED to true,
+            EffectKeys.OUTPUT_GAIN to 100,
         ),
         "Speaker Boost" to mapOf(
-            "bass_enabled" to true, "bass_mode" to 1, "bass_gain" to 400,
-            "eq_enabled" to true,
-            "eq_band_0" to 300, "eq_band_1" to 200, "eq_band_8" to 150, "eq_band_9" to 100,
-            "compressor_enabled" to true,
-            "agc_enabled" to true,
-            "limiter_enabled" to true,
-            "output_gain" to 130,
+            EffectKeys.BASS_ENABLED to true, EffectKeys.BASS_MODE to 1, EffectKeys.BASS_GAIN to 400,
+            EffectKeys.EQ_ENABLED to true,
+            "${EffectKeys.EQ_BAND_PREFIX}0" to 300, "${EffectKeys.EQ_BAND_PREFIX}1" to 200, 
+            "${EffectKeys.EQ_BAND_PREFIX}8" to 150, "${EffectKeys.EQ_BAND_PREFIX}9" to 100,
+            EffectKeys.COMPRESSOR_ENABLED to true,
+            EffectKeys.AGC_ENABLED to true,
+            EffectKeys.LIMITER_ENABLED to true,
+            EffectKeys.OUTPUT_GAIN to 130,
         ),
         "Headphone" to mapOf(
-            "crossfeed_enabled" to true, "crossfeed_level" to 25,
-            "spatial_enabled" to true, "spatial_blend" to 50,
-            "widener_enabled" to true, "widener_width" to 130,
-            "limiter_enabled" to true,
-            "output_gain" to 100,
+            EffectKeys.CROSSFEED_ENABLED to true, EffectKeys.CROSSFEED_LEVEL to 25,
+            EffectKeys.SPATIAL_ENABLED to true, EffectKeys.SPATIAL_BLEND to 50,
+            EffectKeys.WIDENER_ENABLED to true, EffectKeys.WIDENER_WIDTH to 130,
+            EffectKeys.LIMITER_ENABLED to true,
+            EffectKeys.OUTPUT_GAIN to 100,
         ),
         "Bass Heavy" to mapOf(
-            "bass_enabled" to true, "bass_mode" to 2, "bass_gain" to 800,
-            "eq_enabled" to true,
-            "eq_band_0" to 400, "eq_band_1" to 350, "eq_band_2" to 250, "eq_band_3" to 100,
-            "tube_enabled" to true, "tube_drive" to 150, "tube_mix" to 30,
-            "limiter_enabled" to true,
-            "output_gain" to 110,
+            EffectKeys.BASS_ENABLED to true, EffectKeys.BASS_MODE to 2, EffectKeys.BASS_GAIN to 800,
+            EffectKeys.EQ_ENABLED to true,
+            "${EffectKeys.EQ_BAND_PREFIX}0" to 400, "${EffectKeys.EQ_BAND_PREFIX}1" to 350, 
+            "${EffectKeys.EQ_BAND_PREFIX}2" to 250, "${EffectKeys.EQ_BAND_PREFIX}3" to 100,
+            EffectKeys.TUBE_ENABLED to true, EffectKeys.TUBE_DRIVE to 150, EffectKeys.TUBE_MIX to 30,
+            EffectKeys.LIMITER_ENABLED to true,
+            EffectKeys.OUTPUT_GAIN to 110,
         ),
         "Vocal" to mapOf(
-            "eq_enabled" to true,
-            "eq_band_0" to -200, "eq_band_1" to -100,
-            "eq_band_4" to 250, "eq_band_5" to 300, "eq_band_6" to 200,
-            "eq_band_8" to -100, "eq_band_9" to -200,
-            "exciter_enabled" to true,
-            "exciter_drive" to 30, "exciter_blend" to 20, "exciter_freq" to 3000,
-            "compressor_enabled" to true,
-            "limiter_enabled" to true,
-            "output_gain" to 100,
+            EffectKeys.EQ_ENABLED to true,
+            "${EffectKeys.EQ_BAND_PREFIX}0" to -200, "${EffectKeys.EQ_BAND_PREFIX}1" to -100,
+            "${EffectKeys.EQ_BAND_PREFIX}4" to 250, "${EffectKeys.EQ_BAND_PREFIX}5" to 300, 
+            "${EffectKeys.EQ_BAND_PREFIX}6" to 200,
+            "${EffectKeys.EQ_BAND_PREFIX}8" to -100, "${EffectKeys.EQ_BAND_PREFIX}9" to -200,
+            EffectKeys.EXCITER_ENABLED to true,
+            EffectKeys.EXCITER_DRIVE to 30, EffectKeys.EXCITER_BLEND to 20, EffectKeys.EXCITER_FREQ to 3000,
+            EffectKeys.COMPRESSOR_ENABLED to true,
+            EffectKeys.LIMITER_ENABLED to true,
+            EffectKeys.OUTPUT_GAIN to 100,
         ),
     )
 
@@ -162,16 +193,25 @@ object PresetManager {
             when (value) {
                 is Boolean -> editor.putBoolean(key, value)
                 is Int -> editor.putInt(key, value)
+                is String -> editor.putString(key, value)
             }
         }
-        editor.putBoolean("master_enabled", true)
+        editor.putBoolean(EffectKeys.MASTER_ENABLED, true)
         editor.apply()
         Log.d(TAG, "Loaded builtin preset: $name")
     }
 
     fun deletePreset(context: Context, name: String) {
-        val file = File(presetsDir(context), "${sanitizeName(name)}.json")
+        val file = getPresetFile(context, name)
         if (file.exists()) file.delete()
+    }
+
+    fun renamePreset(context: Context, oldName: String, newName: String) {
+        val oldFile = getPresetFile(context, oldName)
+        val newFile = getPresetFile(context, newName)
+        if (oldFile.exists()) {
+            oldFile.renameTo(newFile)
+        }
     }
 
     fun listPresets(context: Context): List<String> {
@@ -185,8 +225,12 @@ object PresetManager {
     }
 
     fun exportPreset(context: Context, name: String): String? {
-        val file = File(presetsDir(context), "${sanitizeName(name)}.json")
+        val file = getPresetFile(context, name)
         return if (file.exists()) file.readText() else null
+    }
+
+    fun getPresetFile(context: Context, name: String): File {
+        return File(presetsDir(context), "${sanitizeName(name)}.json")
     }
 
     fun importPreset(context: Context, name: String, json: String) {

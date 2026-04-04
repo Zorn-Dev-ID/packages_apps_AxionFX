@@ -315,6 +315,17 @@ fun DashboardScreen(
 
             PreferenceGroup {
                 item {
+                    ClickablePreference(
+                        title = stringResource(R.string.nav_presets),
+                        summary = stringResource(R.string.nav_presets_summary),
+                        icon = Icons.Rounded.BrokenImage,
+                        onClick = { onNavigate("presets") },
+                    )
+                }
+            }
+
+            PreferenceGroup {
+                item {
                     SwitchPreference(
                         title = stringResource(R.string.master_enable_title),
                         summary = stringResource(R.string.master_enable_summary),

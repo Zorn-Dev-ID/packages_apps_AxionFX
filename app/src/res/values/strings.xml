@@ -35,9 +35,9 @@
     <string name="media_only_summary">Only process audio during media playback</string>
     <string name="output_gain_title">Output Gain</string>
     <string name="output_gain_summary">Volume boost/cut</string>
-    <string name="output_pan_title">Output Pan</string>
+    <string name="output_pan_title">Output Balance</string>
     <string name="output_pan_summary">Left/right balance</string>
-    <string name="limiter_threshold_title">Threshold</string>
+    <string name="limiter_threshold_title">Limiter Threshold</string>
     <string name="limiter_threshold_summary">Limiter ceiling level</string>
     <string name="surround_delay_title">Surround Delay</string>
     <string name="surround_delay_summary">Haas effect timing</string>
@@ -46,7 +46,7 @@
     <string name="reset_all">Reset All</string>
 
     <!-- Effects navigation -->
-    <string name="category_effects">Effects</string>
+    <string name="category_effects">Advanced Effects</string>
     <string name="nav_equalizer">Equalizer</string>
     <string name="nav_equalizer_summary">10-band parametric equalizer</string>
     <string name="nav_fir_eq">FIR Equalizer</string>
@@ -55,11 +55,11 @@
     <string name="nav_multiband_summary">Per-frequency dynamic range control</string>
     <string name="nav_convolver">Convolver</string>
     <string name="nav_convolver_summary">Impulse response filter</string>
-    <string name="nav_presets">Presets</string>
-    <string name="nav_presets_summary">Save and load effect profiles</string>
+    <string name="nav_presets">Sound Presets</string>
+    <string name="nav_presets_summary">Manage and share audio profiles</string>
 
     <!-- Bass -->
-    <string name="category_bass">Bass</string>
+    <string name="category_bass">Bass &amp; Clarity</string>
     <string name="bass_boost_title">Bass Boost</string>
     <string name="bass_boost_summary">Enhance low frequencies</string>
     <string name="bass_mode_title">Bass Mode</string>
@@ -70,8 +70,8 @@
     <string name="bass_gain_summary">Boost amount</string>
 
     <!-- Stereo & Spatial -->
-    <string name="category_stereo">Stereo</string>
-    <string name="category_surround">Surround</string>
+    <string name="category_stereo">Stereo Enhancement</string>
+    <string name="category_surround">Surround Sound</string>
     <string name="category_spatial">Spatial Audio</string>
     <string name="widener_title">Stereo Widener</string>
     <string name="widener_summary">Expand stereo image</string>
@@ -93,7 +93,7 @@
     <string name="spatial_hrtf_sadie">SADIE H12</string>
 
     <!-- Dynamics -->
-    <string name="category_dynamics">Dynamics</string>
+    <string name="category_dynamics">Dynamics Control</string>
     <string name="compressor_title">Compressor</string>
     <string name="compressor_summary">Single-band dynamic range compression</string>
     <string name="agc_title">Auto Gain Control</string>
@@ -102,8 +102,8 @@
     <string name="limiter_summary">Look-ahead brick-wall limiter</string>
 
     <!-- Reverb & Saturation -->
-    <string name="category_reverb">Reverb</string>
-    <string name="category_saturation">Saturation</string>
+    <string name="category_reverb">Ambience &amp; Reverb</string>
+    <string name="category_saturation">Warmth &amp; Saturation</string>
     <string name="reverb_title">Reverb</string>
     <string name="reverb_summary">Room ambience simulation</string>
     <string name="reverb_room_title">Room Size</string>
@@ -189,13 +189,37 @@
     <string name="convolver_formats">Supported formats: WAV (16/24/32-bit PCM, 32-bit float)</string>
 
     <!-- Presets screen -->
-    <string name="presets_screen_title">Presets</string>
-    <string name="presets_save">Save Current</string>
+    <string name="presets_screen_title">Sound Presets</string>
+    <string name="presets_save">Save Preset</string>
     <string name="presets_empty">No presets saved yet</string>
     <string name="preset_loaded">Loaded: %1$s</string>
     <string name="presets_builtin_title">Quick Presets</string>
     <string name="presets_saved_title">Saved Presets</string>
-    <string name="presets_tap_to_load">Tap to load \u2022 Long press to delete</string>
+    <string name="presets_tap_to_load">Tap to load settings</string>
+    <string name="presets_import">Import Preset</string>
+    <string name="presets_export">Export to File</string>
+    <string name="presets_share">Share Preset</string>
+    <string name="presets_rename">Rename Preset</string>
+    <string name="presets_delete">Delete Preset</string>
+    <string name="presets_options_title">Preset Options</string>
+    <string name="presets_options_message">What would you like to do with this preset?</string>
+    <string name="presets_import_success">Preset imported</string>
+    <string name="presets_import_failed">Import failed: %1$s</string>
+    <string name="presets_export_success">Preset exported</string>
+    <string name="presets_export_failed">Export failed: %1$s</string>
+    <string name="presets_delete_title">Delete Preset</string>
+    <string name="presets_delete_message">Are you sure you want to delete \'%1$s\'?</string>
+    <string name="presets_rename_title">Rename Preset</string>
+    <string name="presets_rename_label">Preset Name</string>
+    <string name="presets_save_title">Save Current Settings</string>
+    <string name="presets_save_label">Preset Name</string>
+    <string name="presets_save_success">Preset \'%1$s\' saved</string>
+    <string name="presets_confirm_delete">Delete</string>
+    <string name="presets_confirm_rename">Rename</string>
+    <string name="presets_confirm_save">Save</string>
+    <string name="presets_confirm_cancel">Cancel</string>
+    <string name="presets_share_subject">AxionFx Preset: %1$s</string>
+    <string name="presets_share_text">Check out my custom AxionFx audio preset: %1$s!</string>
 
     <!-- Notification -->
     <string name="notification_channel">AxionFx Audio Processing</string>
