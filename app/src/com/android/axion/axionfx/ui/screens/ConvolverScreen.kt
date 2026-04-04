@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import com.android.axion.axionfx.R
+import com.android.axion.axionfx.domain.EffectDefaults
+import com.android.axion.axionfx.domain.EffectKeys
 import com.android.axion.axionfx.ui.components.EffectSlider
 import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.PreferenceGroup
@@ -32,18 +34,14 @@ import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
 import java.io.File
 
-private const val KEY_CONVOLVER_ENABLED = "convolver_enabled"
-private const val KEY_CONVOLVER_MIX = "convolver_mix"
-private const val KEY_CONVOLVER_IR_PATH = "convolver_ir_path"
-
 @Composable
 fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
     BackHandler(onBack = onBackClick)
 
     val context = LocalContext.current
-    var enabled by remember { mutableStateOf(viewModel.loadBoolean(KEY_CONVOLVER_ENABLED, false)) }
-    var mix by remember { mutableFloatStateOf(viewModel.loadInt(KEY_CONVOLVER_MIX, 100).toFloat()) }
-    val irPath = remember { mutableStateOf(viewModel.repo.getString(KEY_CONVOLVER_IR_PATH, null)) }
+    var enabled by remember { mutableStateOf(viewModel.loadBoolean(EffectKeys.CONVOLVER_ENABLED, EffectDefaults.CONVOLVER_ENABLED)) }
+    var mix by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.CONVOLVER_MIX, EffectDefaults.CONVOLVER_MIX).toFloat()) }
+    val irPath = remember { mutableStateOf(viewModel.repo.getString(EffectKeys.CONVOLVER_IR_PATH, null)) }
 
     val irLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult

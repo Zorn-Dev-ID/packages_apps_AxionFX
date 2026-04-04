@@ -111,6 +111,13 @@ fun DashboardScreen(
     var spatialWidth by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SPATIAL_WIDTH, EffectDefaults.SPATIAL_WIDTH).toFloat()) }
     var limiterEnabled by remember { mutableStateOf(viewModel.loadBoolean(EffectKeys.LIMITER_ENABLED, EffectDefaults.LIMITER_ENABLED)) }
 
+    // Hoisted variables that were previously local to PreferenceGroup items
+    var outputPan by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.OUTPUT_PAN, EffectDefaults.OUTPUT_PAN).toFloat()) }
+    var limiterThreshold by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.LIMITER_THRESHOLD, EffectDefaults.LIMITER_THRESHOLD).toFloat()) }
+    var surroundDelay by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SURROUND_DELAY, EffectDefaults.SURROUND_DELAY).toFloat()) }
+    var surroundWidth by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SURROUND_WIDTH, EffectDefaults.SURROUND_WIDTH).toFloat()) }
+    var spatialBlend by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SPATIAL_BLEND, EffectDefaults.SPATIAL_BLEND).toFloat()) }
+
     val activeCount = viewModel.activeEffectCount()
     val isActive = masterEnabled
 
@@ -132,17 +139,32 @@ fun DashboardScreen(
                 FilledTonalButton(onClick = {
                     showResetDialog = false
                     fx.resetAll()
-                    masterEnabled = true; outputGain = 100f
-                    bassEnabled = false; bassMode = 0; bassGain = 0f
-                    widenerEnabled = false; widenerWidth = 100f
-                    reverbEnabled = false; reverbWet = 30f; reverbRoomSize = 50f
-                    compressorEnabled = false
-                    tubeEnabled = false; tubeDrive = 100f; tubeMix = 50f
-                    agcEnabled = false
-                    crossfeedEnabled = false; crossfeedLevel = 30f
-                    surroundEnabled = false
-                    spatialEnabled = false; spatialWidth = 30f
-                    limiterEnabled = true
+                    masterEnabled = EffectDefaults.MASTER_ENABLED
+                    outputGain = EffectDefaults.OUTPUT_GAIN.toFloat()
+                    outputPan = EffectDefaults.OUTPUT_PAN.toFloat()
+                    bassEnabled = EffectDefaults.BASS_ENABLED
+                    bassMode = EffectDefaults.BASS_MODE
+                    bassGain = EffectDefaults.BASS_GAIN.toFloat()
+                    widenerEnabled = EffectDefaults.WIDENER_ENABLED
+                    widenerWidth = EffectDefaults.WIDENER_WIDTH.toFloat()
+                    reverbEnabled = EffectDefaults.REVERB_ENABLED
+                    reverbWet = EffectDefaults.REVERB_WET.toFloat()
+                    reverbRoomSize = EffectDefaults.REVERB_ROOM.toFloat()
+                    compressorEnabled = EffectDefaults.COMPRESSOR_ENABLED
+                    tubeEnabled = EffectDefaults.TUBE_ENABLED
+                    tubeDrive = EffectDefaults.TUBE_DRIVE.toFloat()
+                    tubeMix = EffectDefaults.TUBE_MIX.toFloat()
+                    agcEnabled = EffectDefaults.AGC_ENABLED
+                    crossfeedEnabled = EffectDefaults.CROSSFEED_ENABLED
+                    crossfeedLevel = EffectDefaults.CROSSFEED_LEVEL.toFloat()
+                    surroundEnabled = EffectDefaults.SURROUND_ENABLED
+                    surroundDelay = EffectDefaults.SURROUND_DELAY.toFloat()
+                    surroundWidth = EffectDefaults.SURROUND_WIDTH.toFloat()
+                    spatialEnabled = EffectDefaults.SPATIAL_ENABLED
+                    spatialWidth = EffectDefaults.SPATIAL_WIDTH.toFloat()
+                    spatialBlend = EffectDefaults.SPATIAL_BLEND.toFloat()
+                    limiterEnabled = EffectDefaults.LIMITER_ENABLED
+                    limiterThreshold = EffectDefaults.LIMITER_THRESHOLD.toFloat()
                 }) { Text(stringResource(R.string.reset_confirm)) }
             },
             dismissButton = {
@@ -230,7 +252,7 @@ fun DashboardScreen(
                             Text(
                                 text = if (isActive) stringResource(R.string.status_active)
                                     else stringResource(R.string.status_disabled),
-                                style = MaterialTheme.typography.titleMediumEmphasized,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = contentColor,
                             )
                             Text(
@@ -326,38 +348,36 @@ fun DashboardScreen(
                     )
                 }
                 item {
-                    var pan by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.OUTPUT_PAN, EffectDefaults.OUTPUT_PAN).toFloat()) }
                     EffectSlider(
                         title = stringResource(R.string.output_pan_title),
                         summary = stringResource(R.string.output_pan_summary),
-                        value = pan,
+                        value = outputPan,
                         valueRange = -100f..100f,
                         enabled = isActive,
                         onValueChange = {
-                            pan = it
+                            outputPan = it
                             fx.setOutputPan(it.toInt())
                         },
                         onReset = {
-                            pan = 0f
-                            fx.setOutputPan(0)
+                            outputPan = EffectDefaults.OUTPUT_PAN.toFloat()
+                            fx.setOutputPan(EffectDefaults.OUTPUT_PAN)
                         },
                     )
                 }
                 item {
-                    var threshold by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.LIMITER_THRESHOLD, EffectDefaults.LIMITER_THRESHOLD).toFloat()) }
                     EffectSlider(
                         title = stringResource(R.string.limiter_threshold_title),
                         summary = stringResource(R.string.limiter_threshold_summary),
-                        value = threshold,
+                        value = limiterThreshold,
                         valueRange = -60f..0f,
                         unit = "dB",
                         enabled = isActive,
                         onValueChange = {
-                            threshold = it
+                            limiterThreshold = it
                             fx.setLimiterThreshold(it.toInt())
                         },
                         onReset = {
-                            threshold = EffectDefaults.LIMITER_THRESHOLD.toFloat()
+                            limiterThreshold = EffectDefaults.LIMITER_THRESHOLD.toFloat()
                             fx.setLimiterThreshold(EffectDefaults.LIMITER_THRESHOLD)
                         },
                     )
@@ -396,14 +416,6 @@ fun DashboardScreen(
                         summary = stringResource(R.string.nav_convolver_summary),
                         icon = Icons.Rounded.Memory,
                         onClick = { onNavigate("convolver") },
-                    )
-                }
-                item {
-                    ClickablePreference(
-                        title = stringResource(R.string.nav_presets),
-                        summary = stringResource(R.string.nav_presets_summary),
-                        icon = Icons.Rounded.BrokenImage,
-                        onClick = { onNavigate("presets") },
                     )
                 }
             }
@@ -525,32 +537,38 @@ fun DashboardScreen(
                     )
                 }
                 item {
-                    var surrDelay by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SURROUND_DELAY, EffectDefaults.SURROUND_DELAY).toFloat()) }
                     EffectSlider(
                         title = stringResource(R.string.surround_delay_title),
                         summary = stringResource(R.string.surround_delay_summary),
-                        value = surrDelay,
+                        value = surroundDelay,
                         valueRange = 100f..4000f,
                         unit = "ms/100",
                         enabled = surroundEnabled,
                         onValueChange = {
-                            surrDelay = it
+                            surroundDelay = it
                             fx.setSurroundDelay(it.toInt())
+                        },
+                        onReset = {
+                            surroundDelay = EffectDefaults.SURROUND_DELAY.toFloat()
+                            fx.setSurroundDelay(EffectDefaults.SURROUND_DELAY)
                         },
                     )
                 }
                 item {
-                    var surrWidth by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SURROUND_WIDTH, EffectDefaults.SURROUND_WIDTH).toFloat()) }
                     EffectSlider(
                         title = stringResource(R.string.surround_width_title),
                         summary = stringResource(R.string.surround_width_summary),
-                        value = surrWidth,
+                        value = surroundWidth,
                         valueRange = 0f..100f,
                         unit = "%",
                         enabled = surroundEnabled,
                         onValueChange = {
-                            surrWidth = it
+                            surroundWidth = it
                             fx.setSurroundWidth(it.toInt())
+                        },
+                        onReset = {
+                            surroundWidth = EffectDefaults.SURROUND_WIDTH.toFloat()
+                            fx.setSurroundWidth(EffectDefaults.SURROUND_WIDTH)
                         },
                     )
                 }
@@ -569,7 +587,6 @@ fun DashboardScreen(
                     )
                 }
                 item {
-                    var spatialBlend by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.SPATIAL_BLEND, EffectDefaults.SPATIAL_BLEND).toFloat()) }
                     EffectSlider(
                         title = stringResource(R.string.spatial_blend_title),
                         summary = stringResource(R.string.spatial_blend_summary),
@@ -581,9 +598,11 @@ fun DashboardScreen(
                             spatialBlend = it
                             fx.setSpatialBlend(it.toInt())
                         },
+                        onReset = {
+                            spatialBlend = EffectDefaults.SPATIAL_BLEND.toFloat()
+                            fx.setSpatialBlend(EffectDefaults.SPATIAL_BLEND)
+                        },
                     )
-                }
-                item {
                 }
             }
 
@@ -740,9 +759,8 @@ private fun AudioStatRow(label: String, value: String, color: Color) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.labelMediumEmphasized,
+            style = MaterialTheme.typography.labelMedium,
             color = color,
         )
     }
 }
-
