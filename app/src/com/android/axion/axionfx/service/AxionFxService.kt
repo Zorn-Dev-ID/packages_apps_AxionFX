@@ -65,7 +65,7 @@ class AxionFxService : Service() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs = getPrefs(this)
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         AxionFxController.attachSession(0)
@@ -187,7 +187,12 @@ class AxionFxService : Service() {
         AxionFxController.setFirEqEnabled(prefs.getBoolean("fir_eq_enabled", false))
 
         AxionFxController.setParameter(0xC01, prefs.getInt("convolver_mix", 100))
-        prefs.getString("convolver_ir_path", null)?.let { AxionFxController.loadConvolverIr(it) }
+        prefs.getString("convolver_ir_path", null)?.let { path ->
+            try {
+                val wavBytes = java.io.File(path).readBytes()
+                AxionFxController.loadConvolverIrData(wavBytes)
+            } catch (_: Exception) {}
+        }
         AxionFxController.setConvolverEnabled(prefs.getBoolean("convolver_enabled", false))
 
         AxionFxController.setSpatialBlend(prefs.getInt("spatial_blend", 70))

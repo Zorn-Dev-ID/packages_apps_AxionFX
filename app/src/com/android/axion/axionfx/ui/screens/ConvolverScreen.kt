@@ -32,6 +32,7 @@ import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
+import android.provider.OpenableColumns
 import java.io.File
 
 @Composable
@@ -42,6 +43,7 @@ fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
     var enabled by remember { mutableStateOf(viewModel.loadBoolean(EffectKeys.CONVOLVER_ENABLED, EffectDefaults.CONVOLVER_ENABLED)) }
     var mix by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.CONVOLVER_MIX, EffectDefaults.CONVOLVER_MIX).toFloat()) }
     val irPath = remember { mutableStateOf(viewModel.repo.getString(EffectKeys.CONVOLVER_IR_PATH, null)) }
+    val irName = remember { mutableStateOf(viewModel.repo.getString(EffectKeys.CONVOLVER_IR_NAME, null)) }
 
     val irLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
@@ -52,8 +54,16 @@ fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 destFile.outputStream().use { output -> input.copyTo(output) }
             }
+            var displayName: String? = null
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    displayName = cursor.getString(0)
+                }
+            }
             val path = destFile.absolutePath
             irPath.value = path
+            irName.value = displayName
+            viewModel.repo.putString(EffectKeys.CONVOLVER_IR_NAME, displayName)
             viewModel.interactor.loadConvolverIr(path)
         } catch (_: Exception) {}
     }
@@ -82,7 +92,7 @@ fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                 item {
                     ClickablePreference(
                         title = stringResource(R.string.convolver_load_ir),
-                        summary = irPath.value ?: stringResource(R.string.convolver_no_ir),
+                        summary = irName.value ?: irPath.value ?: stringResource(R.string.convolver_no_ir),
                         onClick = {
                             irLauncher.launch(arrayOf("audio/x-wav", "audio/*", "*/*"))
                         },
@@ -100,6 +110,10 @@ fun ConvolverScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                         onValueChange = {
                             mix = it
                             viewModel.interactor.setConvolverMix(it.toInt())
+                        },
+                        onReset = {
+                            mix = EffectDefaults.CONVOLVER_MIX.toFloat()
+                            viewModel.interactor.setConvolverMix(EffectDefaults.CONVOLVER_MIX)
                         },
                     )
                 }

@@ -459,7 +459,7 @@ private fun CircularEqControl(
         for (i in 0..2) {
             val sign = if (values[i] >= 0) "+" else ""
             val label = textMeasurer.measure(labels[i], labelStyle)
-            val value = textMeasurer.measure("${sign}${values[i].toInt()}", valueStyle)
+            val value = textMeasurer.measure("${sign}${"%.1f".format(values[i])}", valueStyle)
             val labelR = outerR * 0.78f
             val lx = cx + labelR * cos(angles[i]).toFloat()
             val ly = cy + labelR * sin(angles[i]).toFloat()

@@ -223,7 +223,12 @@ class EffectInteractor(private val repo: EffectRepository) {
 
     fun loadConvolverIr(path: String) {
         repo.putString(EffectKeys.CONVOLVER_IR_PATH, path)
-        AxionFxController.loadConvolverIr(path)
+        try {
+            val wavBytes = java.io.File(path).readBytes()
+            AxionFxController.loadConvolverIrData(wavBytes)
+        } catch (e: Exception) {
+            android.util.Log.e("EffectInteractor", "Failed to read IR file: $path", e)
+        }
     }
 
     fun resetAll() {
@@ -291,5 +296,6 @@ class EffectInteractor(private val repo: EffectRepository) {
         setConvolverEnabled(EffectDefaults.CONVOLVER_ENABLED)
         setConvolverMix(EffectDefaults.CONVOLVER_MIX)
         repo.putString(EffectKeys.CONVOLVER_IR_PATH, null)
+        repo.putString(EffectKeys.CONVOLVER_IR_NAME, null)
     }
 }

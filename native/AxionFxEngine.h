@@ -47,6 +47,7 @@ public:
     bool isMasterEnabled() const { return mMasterEnabled; }
     bool loadIrFromPath(const char* path);
     bool loadIrFromFd(int fd, int64_t offset, int64_t length);
+    bool loadIrFromData(const uint8_t* data, size_t size);
 
 private:
     bool mMasterEnabled = false;

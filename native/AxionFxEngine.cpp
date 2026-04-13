@@ -348,6 +348,18 @@ bool AxionFxEngine::loadIrFromPath(const char* path) {
     return true;
 }
 
+bool AxionFxEngine::loadIrFromData(const uint8_t* data, size_t size) {
+    ALOGI("loadIrFromData: %zu bytes", size);
+    auto wav = loadWavFromMemory(data, size);
+    if (!wav.valid || wav.samples.empty()) {
+        ALOGE("loadIrFromData: WAV parse failed valid=%d samples=%zu", wav.valid, wav.samples.size());
+        return false;
+    }
+    ALOGI("loadIrFromData: parsed %d frames, %d channels, %dHz", wav.numFrames, wav.channels, wav.sampleRate);
+    mConvolver.loadImpulseResponse(wav.samples.data(), wav.numFrames);
+    return true;
+}
+
 bool AxionFxEngine::loadIrFromFd(int fd, int64_t offset, int64_t length) {
     auto wav = loadWavFromFd(fd, offset, length);
     if (!wav.valid || wav.samples.empty()) return false;

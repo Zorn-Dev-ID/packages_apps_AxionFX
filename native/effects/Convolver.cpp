@@ -32,6 +32,9 @@ Convolver::Convolver() {
     mAccumFreq.resize(FFT_SIZE, 0.0f);
     mInputBufL.resize(BLOCK_SIZE, 0.0f);
     mInputBufR.resize(BLOCK_SIZE, 0.0f);
+    mOutputBufL.resize(BLOCK_SIZE, 0.0f);
+    mOutputBufR.resize(BLOCK_SIZE, 0.0f);
+    mOutputPos = BLOCK_SIZE;
     mOverlapL.resize(BLOCK_SIZE, 0.0f);
     mOverlapR.resize(BLOCK_SIZE, 0.0f);
 }
@@ -86,23 +89,26 @@ void Convolver::setMix(float mix) {
 void Convolver::process(float* buffer, int frames) {
     if (!mEnabled || mNumPartitions == 0 || !mFftSetup) return;
 
-    int processed = 0;
-    while (processed < frames) {
-        int remaining = BLOCK_SIZE - mInputPos;
-        int toCopy = std::min(remaining, frames - processed);
+    for (int f = 0; f < frames; f++) {
+        float dryL = buffer[f * 2];
+        float dryR = buffer[f * 2 + 1];
 
-        for (int i = 0; i < toCopy; i++) {
-            mInputBufL[mInputPos + i] = buffer[(processed + i) * 2];
-            mInputBufR[mInputPos + i] = buffer[(processed + i) * 2 + 1];
+        mInputBufL[mInputPos] = dryL;
+        mInputBufR[mInputPos] = dryR;
+
+        if (mOutputPos < BLOCK_SIZE) {
+            buffer[f * 2] = dryL * (1.0f - mMix) + mOutputBufL[mOutputPos] * mMix;
+            buffer[f * 2 + 1] = dryR * (1.0f - mMix) + mOutputBufR[mOutputPos] * mMix;
+            mOutputPos++;
         }
 
-        mInputPos += toCopy;
+        mInputPos++;
 
         if (mInputPos >= BLOCK_SIZE) {
             auto processChannel = [&](std::vector<float>& inputBuf,
                                        std::vector<float>& fdl,
                                        std::vector<float>& overlap,
-                                       float* output, int outStride, int outOffset) {
+                                       std::vector<float>& outputBuf) {
                 std::memset(mFftBuf.data(), 0, FFT_SIZE * sizeof(float));
                 std::memcpy(mFftBuf.data(), inputBuf.data(), BLOCK_SIZE * sizeof(float));
 
@@ -125,10 +131,7 @@ void Convolver::process(float* buffer, int frames) {
 
                 float scale = 1.0f / FFT_SIZE;
                 for (int i = 0; i < BLOCK_SIZE; i++) {
-                    float wet = (mFftBuf[i] * scale + overlap[i]) * mMix;
-                    float dry = output[(processed - BLOCK_SIZE + i) * outStride + outOffset]
-                                * (1.0f - mMix);
-                    output[(processed - BLOCK_SIZE + i) * outStride + outOffset] = dry + wet;
+                    outputBuf[i] = mFftBuf[i] * scale + overlap[i];
                 }
 
                 std::memcpy(overlap.data(), mFftBuf.data() + BLOCK_SIZE,
@@ -138,14 +141,13 @@ void Convolver::process(float* buffer, int frames) {
                 }
             };
 
-            processChannel(mInputBufL, mFdlL, mOverlapL, buffer, 2, 0);
-            processChannel(mInputBufR, mFdlR, mOverlapR, buffer, 2, 1);
+            processChannel(mInputBufL, mFdlL, mOverlapL, mOutputBufL);
+            processChannel(mInputBufR, mFdlR, mOverlapR, mOutputBufR);
 
             mFdlPos = (mFdlPos + 1) % mNumPartitions;
             mInputPos = 0;
+            mOutputPos = 0;
         }
-
-        processed += toCopy;
     }
 }
 
@@ -155,9 +157,12 @@ void Convolver::setEnabled(bool enabled) {
 
 void Convolver::reset() {
     mInputPos = 0;
+    mOutputPos = BLOCK_SIZE;
     mFdlPos = 0;
     std::fill(mInputBufL.begin(), mInputBufL.end(), 0.0f);
     std::fill(mInputBufR.begin(), mInputBufR.end(), 0.0f);
+    std::fill(mOutputBufL.begin(), mOutputBufL.end(), 0.0f);
+    std::fill(mOutputBufR.begin(), mOutputBufR.end(), 0.0f);
     std::fill(mOverlapL.begin(), mOverlapL.end(), 0.0f);
     std::fill(mOverlapR.begin(), mOverlapR.end(), 0.0f);
     std::fill(mFdlL.begin(), mFdlL.end(), 0.0f);

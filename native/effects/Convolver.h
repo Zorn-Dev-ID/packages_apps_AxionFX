@@ -57,6 +57,10 @@ private:
     std::vector<float> mInputBufR;
     int mInputPos = 0;
 
+    std::vector<float> mOutputBufL;
+    std::vector<float> mOutputBufR;
+    int mOutputPos = 0;
+
     std::vector<float> mOverlapL;
     std::vector<float> mOverlapR;
 

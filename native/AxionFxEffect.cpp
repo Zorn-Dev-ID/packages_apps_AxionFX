@@ -102,6 +102,16 @@ RetCode AxionFxContext::setParams(const std::vector<uint8_t>& params) {
         return RetCode::SUCCESS;
     }
 
+    if (paramId == axionfx::PARAM_CONVOLVER_LOAD_IR_DATA) {
+        if (params.size() > sizeof(int32_t)) {
+            const uint8_t* wavData = params.data() + sizeof(int32_t);
+            size_t wavSize = params.size() - sizeof(int32_t);
+            mEngine.loadIrFromData(wavData, wavSize);
+        }
+        mLastParams = params;
+        return RetCode::SUCCESS;
+    }
+
     if (params.size() < sizeof(axionfx::AxionFxParam)) {
         LOG(ERROR) << "setParams: too small " << params.size();
         return RetCode::ERROR_ILLEGAL_PARAMETER;

@@ -40,6 +40,7 @@ struct WavDataMulti {
 
 WavData loadWavFile(const std::string& path);
 WavData loadWavFromFd(int fd, int64_t offset, int64_t length);
+WavData loadWavFromMemory(const uint8_t* data, size_t size);
 
 WavDataMulti loadWavFileMulti(const std::string& path, int maxChannels = 16);
 WavDataMulti loadWavFromFdMulti(int fd, int64_t offset, int64_t length, int maxChannels = 16);

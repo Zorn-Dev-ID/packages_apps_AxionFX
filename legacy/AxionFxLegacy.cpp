@@ -116,9 +116,17 @@ static int axfx_command(effect_handle_t self, uint32_t cmdCode, uint32_t cmdSize
             auto *param = static_cast<effect_param_t *>(pCmdData);
             if (param->psize < 4 || param->vsize < 4) return -EINVAL;
             int32_t paramId = *reinterpret_cast<int32_t *>(param->data);
-            int32_t value = *reinterpret_cast<int32_t *>(
-                param->data + ((param->psize + 3) & ~3));
-            ctx->engine.setParameter(paramId, value);
+            uint32_t valueOffset = (param->psize + 3) & ~3;
+            if (paramId == axionfx::PARAM_CONVOLVER_LOAD_IR ||
+                paramId == axionfx::PARAM_CONVOLVER_LOAD_IR_DATA) {
+                const uint8_t *wavData = reinterpret_cast<const uint8_t *>(
+                    param->data + valueOffset);
+                ctx->engine.loadIrFromData(wavData, param->vsize);
+            } else {
+                int32_t value = *reinterpret_cast<int32_t *>(
+                    param->data + valueOffset);
+                ctx->engine.setParameter(paramId, value);
+            }
             if (replySize && *replySize >= sizeof(int32_t) && pReplyData) {
                 *static_cast<int32_t *>(pReplyData) = 0;
             }

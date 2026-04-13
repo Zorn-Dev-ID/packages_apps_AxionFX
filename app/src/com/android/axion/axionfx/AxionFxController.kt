@@ -130,15 +130,14 @@ object AxionFxController {
 
     fun setConvolverEnabled(enabled: Boolean) = setParameter(0xC00, if (enabled) 1 else 0)
 
-    fun loadConvolverIr(path: String) {
-        val paramBytes = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(0xC02).array()
-        val pathBytes = path.toByteArray(Charsets.UTF_8)
+    fun loadConvolverIrData(wavBytes: ByteArray) {
+        val paramBytes = ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(0xC03).array()
         sessions.values.forEach { effect ->
             try {
-                effect.setParameter(paramBytes, pathBytes)
-                Log.d(TAG, "loadConvolverIr: $path")
+                effect.setParameter(paramBytes, wavBytes)
+                Log.d(TAG, "loadConvolverIrData: ${wavBytes.size} bytes")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to load IR: $path", e)
+                Log.e(TAG, "Failed to load IR data: ${wavBytes.size} bytes", e)
             }
         }
     }

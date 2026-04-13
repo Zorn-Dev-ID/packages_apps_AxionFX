@@ -255,6 +255,15 @@ WavDataMulti loadWavFromFdMulti(int fd, int64_t offset, int64_t length, int maxC
     return result;
 }
 
+WavData loadWavFromMemory(const uint8_t* data, size_t size) {
+    if (!data || size == 0) return {};
+    FILE* f = fmemopen(const_cast<uint8_t*>(data), size, "rb");
+    if (!f) return {};
+    auto result = parseWav(f);
+    fclose(f);
+    return result;
+}
+
 WavData loadWavFromFd(int fd, int64_t offset, int64_t length) {
     (void)length;
     int dupFd = dup(fd);

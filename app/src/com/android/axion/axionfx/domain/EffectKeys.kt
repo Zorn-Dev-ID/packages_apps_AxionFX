@@ -72,4 +72,5 @@ object EffectKeys {
     const val CONVOLVER_ENABLED = "convolver_enabled"
     const val CONVOLVER_MIX = "convolver_mix"
     const val CONVOLVER_IR_PATH = "convolver_ir_path"
+    const val CONVOLVER_IR_NAME = "convolver_ir_name"
 }
