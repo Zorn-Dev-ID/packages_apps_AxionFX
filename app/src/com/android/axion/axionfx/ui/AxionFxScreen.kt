@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.android.axion.axionfx.R
 import com.android.axion.axionfx.ui.screens.ConvolverScreen
 import com.android.axion.axionfx.ui.screens.DashboardScreen
+import com.android.axion.axionfx.ui.screens.DeviceProfilesScreen
 import com.android.axion.axionfx.ui.screens.EqualizerScreen
 import com.android.axion.axionfx.ui.screens.ExciterScreen
 import com.android.axion.axionfx.ui.screens.FirEqScreen
@@ -131,6 +132,7 @@ private fun DetailContent(
         "exciter" -> ExciterScreen(viewModel = viewModel, onBackClick = onBack)
         "convolver" -> ConvolverScreen(viewModel = viewModel, onBackClick = onBack)
         "presets" -> PresetsScreen(viewModel = viewModel, onBackClick = onBack)
+        "device_profiles" -> DeviceProfilesScreen(viewModel = viewModel, onBackClick = onBack)
         else -> DetailPlaceholder()
     }
 }

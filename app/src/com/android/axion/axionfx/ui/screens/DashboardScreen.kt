@@ -26,9 +26,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BrokenImage
+import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -315,17 +316,6 @@ fun DashboardScreen(
 
             PreferenceGroup {
                 item {
-                    ClickablePreference(
-                        title = stringResource(R.string.nav_presets),
-                        summary = stringResource(R.string.nav_presets_summary),
-                        icon = Icons.Rounded.BrokenImage,
-                        onClick = { onNavigate("presets") },
-                    )
-                }
-            }
-
-            PreferenceGroup {
-                item {
                     SwitchPreference(
                         title = stringResource(R.string.master_enable_title),
                         summary = stringResource(R.string.master_enable_summary),
@@ -335,6 +325,25 @@ fun DashboardScreen(
                             fx.setMasterEnabled(it)
                             if (it) AxionFxService.start(context) else AxionFxService.stop(context)
                         },
+                    )
+                }
+            }
+
+            PreferenceGroup(title = stringResource(R.string.category_library), collapsible = true, initiallyExpanded = false) {
+                item {
+                    ClickablePreference(
+                        title = stringResource(R.string.nav_presets),
+                        summary = stringResource(R.string.nav_presets_summary),
+                        icon = Icons.Rounded.LibraryMusic,
+                        onClick = { onNavigate("presets") },
+                    )
+                }
+                item {
+                    ClickablePreference(
+                        title = stringResource(R.string.nav_device_profiles),
+                        summary = stringResource(R.string.nav_device_profiles_summary),
+                        icon = Icons.Rounded.Headphones,
+                        onClick = { onNavigate("device_profiles") },
                     )
                 }
             }

@@ -1,0 +1,54 @@
+/*
+ * Copyright 2025-2026 AxionOS
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.axion.axionfx.device
+
+import android.media.AudioDeviceInfo
+
+enum class DeviceCategory(val prefKey: String) {
+    SPEAKER("device_profile_speaker"),
+    WIRED("device_profile_wired"),
+    BLUETOOTH("device_profile_bluetooth"),
+    USB("device_profile_usb"),
+    OTHER("device_profile_other");
+
+    companion object {
+        fun fromDeviceType(type: Int): DeviceCategory = when (type) {
+            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
+            AudioDeviceInfo.TYPE_BUILTIN_SPEAKER_SAFE,
+            AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> SPEAKER
+
+            AudioDeviceInfo.TYPE_WIRED_HEADSET,
+            AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+            AudioDeviceInfo.TYPE_LINE_ANALOG,
+            AudioDeviceInfo.TYPE_LINE_DIGITAL,
+            AudioDeviceInfo.TYPE_AUX_LINE -> WIRED
+
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+            AudioDeviceInfo.TYPE_BLE_HEADSET,
+            AudioDeviceInfo.TYPE_BLE_SPEAKER,
+            AudioDeviceInfo.TYPE_BLE_BROADCAST,
+            AudioDeviceInfo.TYPE_HEARING_AID -> BLUETOOTH
+
+            AudioDeviceInfo.TYPE_USB_HEADSET,
+            AudioDeviceInfo.TYPE_USB_DEVICE,
+            AudioDeviceInfo.TYPE_USB_ACCESSORY -> USB
+
+            else -> OTHER
+        }
+    }
+}

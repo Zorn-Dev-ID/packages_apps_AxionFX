@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -25,6 +24,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Storage
@@ -35,8 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -48,8 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -58,7 +54,9 @@ import com.android.axion.axionfx.R
 import com.android.axion.axionfx.preset.PresetManager
 import com.android.axion.axionfx.service.AxionFxService
 import com.android.axion.axionfx.ui.AxionFxViewModel
+import com.android.axion.compose.preferences.BasePreference
 import com.android.axion.compose.preferences.ClickablePreference
+import com.android.axion.compose.preferences.LocalPreferencePosition
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.axion.compose.scaffold.AxionScaffold
 import java.io.BufferedReader
@@ -229,17 +227,15 @@ fun PresetsScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
             PreferenceGroup(title = stringResource(R.string.presets_builtin_title)) {
                 PresetManager.listBuiltinPresets().forEach { name ->
                     item {
-                        ListItem(
-                            headlineContent = { Text(name) },
-                            supportingContent = { Text(stringResource(R.string.presets_tap_to_load)) },
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.medium)
-                                .clickable {
-                                    PresetManager.loadBuiltinPreset(name, viewModel.repo.prefs)
-                                    AxionFxService.instance?.restoreSettings()
-                                    Toast.makeText(context, context.getString(R.string.preset_loaded, name), Toast.LENGTH_SHORT).show()
-                                }
+                        ClickablePreference(
+                            title = name,
+                            summary = stringResource(R.string.presets_tap_to_load),
+                            icon = Icons.Rounded.MusicNote,
+                            onClick = {
+                                PresetManager.loadBuiltinPreset(name, viewModel.repo.prefs)
+                                AxionFxService.instance?.restoreSettings()
+                                Toast.makeText(context, context.getString(R.string.preset_loaded, name), Toast.LENGTH_SHORT).show()
+                            },
                         )
                     }
                 }
@@ -309,46 +305,49 @@ private fun PresetListItem(
     onShare: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val position = LocalPreferencePosition.current
 
-    ListItem(
-        headlineContent = { Text(name) },
-        supportingContent = { Text(stringResource(R.string.presets_tap_to_load)) },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        trailingContent = {
+    BasePreference(
+        title = name,
+        summary = stringResource(R.string.presets_tap_to_load),
+        icon = Icons.Rounded.MusicNote,
+        position = position,
+        modifier = Modifier.clickable(onClick = onLoad),
+        widget = {
             Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                 IconButton(onClick = { expanded = true }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Options")
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = stringResource(R.string.presets_options),
+                    )
                 }
                 DropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.presets_share)) },
                         onClick = { expanded = false; onShare() },
-                        leadingIcon = { Icon(Icons.Rounded.Share, null) }
+                        leadingIcon = { Icon(Icons.Rounded.Share, null) },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.presets_export)) },
                         onClick = { expanded = false; onExport() },
-                        leadingIcon = { Icon(Icons.Rounded.Storage, null) }
+                        leadingIcon = { Icon(Icons.Rounded.Storage, null) },
                     )
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.presets_rename)) },
                         onClick = { expanded = false; onRename() },
-                        leadingIcon = { Icon(Icons.Rounded.Edit, null) }
+                        leadingIcon = { Icon(Icons.Rounded.Edit, null) },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.presets_delete), color = MaterialTheme.colorScheme.error) },
                         onClick = { expanded = false; onDelete() },
-                        leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) }
+                        leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
                     )
                 }
             }
         },
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onLoad)
     )
 }
