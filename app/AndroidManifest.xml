@@ -47,6 +47,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="android.media.action.DISPLAY_AUDIO_EFFECT_CONTROL_PANEL" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.CATEGORY_CONTENT_MUSIC" />
@@ -79,6 +82,17 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="audio_processing" />
+        </service>
+
+        <service
+            android:name=".service.AxionFxTileService"
+            android:icon="@drawable/ic_qs_axionfx"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
         </service>
 
         <provider

@@ -273,7 +273,9 @@ class AxionFxService : Service() {
         AxionFxController.setParameter(0x1004, prefs.getInt("spatial_hrtf_profile", 0))
         AxionFxController.setSpatialEnabled(prefs.getBoolean("spatial_enabled", false))
 
-        AxionFxController.setMasterEnabled(prefs.getBoolean(KEY_MASTER_ENABLED, true))
+        val masterEnabled = prefs.getBoolean(KEY_MASTER_ENABLED, true)
+        _masterEnabled.value = masterEnabled
+        AxionFxController.setMasterEnabled(masterEnabled)
     }
 
     private fun createNotificationChannel() {
@@ -352,12 +354,20 @@ class AxionFxService : Service() {
         val appliedPresetNameFlow: StateFlow<String?> = _appliedPresetName.asStateFlow()
         private val _autoSwitchEnabled = MutableStateFlow(true)
         val autoSwitchEnabledFlow: StateFlow<Boolean> = _autoSwitchEnabled.asStateFlow()
+        private val _masterEnabled = MutableStateFlow(true)
+        val masterEnabledFlow: StateFlow<Boolean> = _masterEnabled.asStateFlow()
+
+        internal fun updateMasterEnabledFlow(enabled: Boolean) {
+            _masterEnabled.value = enabled
+        }
 
         fun primeFromContext(context: Context) {
             val routed = DeviceCategory.routedOutput(context)
             _currentDeviceCategory.value = routed.category
             _currentDeviceName.value = routed.deviceName
-            _autoSwitchEnabled.value = getPrefs(context).getBoolean(KEY_AUTO_SWITCH, true)
+            val prefs = getPrefs(context)
+            _autoSwitchEnabled.value = prefs.getBoolean(KEY_AUTO_SWITCH, true)
+            _masterEnabled.value = prefs.getBoolean(KEY_MASTER_ENABLED, true)
         }
 
         fun start(context: Context) {

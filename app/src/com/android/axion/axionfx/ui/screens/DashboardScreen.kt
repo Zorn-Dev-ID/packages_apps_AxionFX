@@ -96,7 +96,7 @@ fun DashboardScreen(
 
     val context = LocalContext.current
     val fx = viewModel.interactor
-    var masterEnabled by remember { mutableStateOf(viewModel.loadBoolean(EffectKeys.MASTER_ENABLED, EffectDefaults.MASTER_ENABLED)) }
+    val masterEnabled by AxionFxService.masterEnabledFlow.collectAsState()
     var outputGain by remember { mutableFloatStateOf(viewModel.loadInt(EffectKeys.OUTPUT_GAIN, EffectDefaults.OUTPUT_GAIN).toFloat()) }
 
     var bassEnabled by remember { mutableStateOf(viewModel.loadBoolean(EffectKeys.BASS_ENABLED, EffectDefaults.BASS_ENABLED)) }
@@ -161,7 +161,7 @@ fun DashboardScreen(
                 FilledTonalButton(onClick = {
                     showResetDialog = false
                     fx.resetAll()
-                    masterEnabled = EffectDefaults.MASTER_ENABLED
+                    AxionFxService.updateMasterEnabledFlow(EffectDefaults.MASTER_ENABLED)
                     outputGain = EffectDefaults.OUTPUT_GAIN.toFloat()
                     outputPan = EffectDefaults.OUTPUT_PAN.toFloat()
                     bassEnabled = EffectDefaults.BASS_ENABLED
@@ -383,8 +383,8 @@ fun DashboardScreen(
                         summary = stringResource(R.string.master_enable_summary),
                         checked = masterEnabled,
                         onCheckedChange = {
-                            masterEnabled = it
                             fx.setMasterEnabled(it)
+                            AxionFxService.updateMasterEnabledFlow(it)
                             if (it) AxionFxService.start(context) else AxionFxService.stop(context)
                         },
                     )
