@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2025-2026 AxionOS
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="app_name">AxionFx</string>
+    <string name="mode_off">關閉</string>
+    <string name="mode_on">永遠開啟</string>
+    <string name="mode_media">僅媒體</string>
+    <!-- Status -->
+    <string name="status_active">處理中</string>
+    <string name="status_disabled">已停用</string>
+    <string name="status_media_only">僅媒體模式</string>
+    <string name="status_effects_active">%1$d 個效果使用中 \u2022 %2$d%% 增益</string>
+    <string name="status_tap_to_enable">輕觸主開關以啟用</string>
+    <!-- Master -->
+    <string name="category_master">主限制器</string>
+    <string name="master_enable_title">啟用 AxionFx</string>
+    <string name="master_enable_summary">全域音訊處理引擎</string>
+    <string name="media_only_title">僅媒體模式</string>
+    <string name="media_only_summary">僅在媒體播放期間處理音訊</string>
+    <string name="output_gain_title">輸出增益</string>
+    <string name="output_gain_summary">音量增加/減少</string>
+    <string name="output_pan_title">輸出平衡</string>
+    <string name="output_pan_summary">左/右聲道平衡</string>
+    <string name="limiter_threshold_title">限制器閾值</string>
+    <string name="limiter_threshold_summary">限制器上限</string>
+    <string name="surround_delay_title">環繞延遲</string>
+    <string name="surround_delay_summary">Haas 效果時序</string>
+    <string name="surround_width_title">環繞寬度</string>
+    <string name="surround_width_summary">跨聲道混音比例</string>
+    <string name="reset_all">全部重設</string>
+    <!-- Effects navigation -->
+    <string name="category_effects">進階效果</string>
+    <string name="nav_equalizer">等化器</string>
+    <string name="nav_equalizer_summary">10 段參數等化器</string>
+    <string name="nav_fir_eq">FIR 等化器</string>
+    <string name="nav_fir_eq_summary">15 段線性相位等化器</string>
+    <string name="nav_multiband">多頻段壓縮器</string>
+    <string name="nav_multiband_summary">各頻段動態範圍控制</string>
+    <string name="nav_convolver">卷積器</string>
+    <string name="nav_convolver_summary">脈衝響應濾波器</string>
+    <string name="nav_presets">音效預設集</string>
+    <string name="nav_presets_summary">管理並分享音訊設定檔</string>
+    <string name="category_library">預設集與設定檔</string>
+    <!-- Bass -->
+    <string name="category_bass">低音與清晰度</string>
+    <string name="bass_boost_title">重低音</string>
+    <string name="bass_boost_summary">增強低頻</string>
+    <string name="bass_mode_title">低音模式</string>
+    <string name="bass_mode_natural">自然</string>
+    <string name="bass_mode_punch">衝擊</string>
+    <string name="bass_mode_subwoofer">重低音喇叭</string>
+    <string name="bass_gain_title">低音增益</string>
+    <string name="bass_gain_summary">增強量</string>
+    <!-- Stereo & Spatial -->
+    <string name="category_stereo">立體聲增強</string>
+    <string name="category_surround">環繞音效</string>
+    <string name="category_spatial">空間音訊</string>
+    <string name="widener_title">立體聲擴展器</string>
+    <string name="widener_summary">擴展立體聲音場</string>
+    <string name="widener_width_title">寬度</string>
+    <string name="widener_width_summary">立體聲寬度</string>
+    <string name="crossfeed_title">交叉饋送</string>
+    <string name="crossfeed_summary">減少耳機立體聲疲勞感</string>
+    <string name="crossfeed_level_title">交叉饋送強度</string>
+    <string name="crossfeed_level_summary">聲道混合</string>
+    <string name="surround_title">環繞音效</string>
+    <string name="surround_summary">Haas 效果空間增強</string>
+    <string name="spatial_title">HRTF 空間音訊</string>
+    <string name="spatial_summary">Steam Audio HRTF 雙耳渲染</string>
+    <string name="spatial_blend_title">空間混合比例</string>
+    <string name="spatial_blend_summary">HRTF 處理強度</string>
+    <string name="spatial_hrtf_title">HRTF 設定檔</string>
+    <string name="spatial_hrtf_summary">空間渲染用頭部模型</string>
+    <string name="spatial_hrtf_cipic">CIPIC 124</string>
+    <string name="spatial_hrtf_sadie">SADIE H12</string>
+    <!-- Dynamics -->
+    <string name="category_dynamics">動態控制</string>
+    <string name="compressor_title">壓縮器</string>
+    <string name="compressor_summary">單頻段動態範圍壓縮</string>
+    <string name="agc_title">自動增益控制</string>
+    <string name="agc_summary">自動音量調整</string>
+    <string name="limiter_title">限制器</string>
+    <string name="limiter_summary">Look-ahead brick-wall 限制器</string>
+    <!-- Reverb & Saturation -->
+    <string name="category_reverb">環境音與殘響</string>
+    <string name="category_saturation">溫暖感與飽和度</string>
+    <string name="reverb_title">殘響</string>
+    <string name="reverb_summary">空間環境音模擬</string>
+    <string name="reverb_room_title">空間大小</string>
+    <string name="reverb_room_summary">殘響空間尺寸</string>
+    <string name="reverb_wet_title">效果混音比例</string>
+    <string name="reverb_wet_summary">殘響混音比例</string>
+    <string name="tube_title">電子管模擬器</string>
+    <string name="tube_summary">溫暖的類比音色</string>
+    <string name="tube_drive_title">驅動量</string>
+    <string name="tube_drive_summary">飽和強度</string>
+    <string name="tube_mix_title">混音比例</string>
+    <string name="tube_mix_summary">原音/效果混合比例</string>
+    <string name="exciter_nav_title">激勵器</string>
+    <string name="exciter_nav_summary">泛音臨場感與清晰度</string>
+    <!-- Equalizer screen -->
+    <string name="eq_category">參數等化器</string>
+    <string name="eq_enable_title">啟用等化器</string>
+    <string name="eq_enable_summary">10 段參數等化器</string>
+    <string name="eq_simple">簡易</string>
+    <string name="eq_advanced">進階</string>
+    <string name="eq_reset">重設</string>
+    <string name="eq_preset_flat">平坦</string>
+    <string name="eq_preset_bass_boost">重低音</string>
+    <string name="eq_preset_treble_boost">高頻增強</string>
+    <string name="eq_preset_voice">人聲</string>
+    <string name="eq_preset_v_shape">V 型</string>
+    <string name="eq_preset_rock">搖滾</string>
+    <string name="eq_label_bass">低音</string>
+    <string name="eq_label_mid">中音</string>
+    <string name="eq_label_treble">高音</string>
+    <!-- FIR EQ screen -->
+    <string name="fir_eq_screen_title">FIR 等化器</string>
+    <string name="fir_eq_category">線性相位等化器</string>
+    <string name="fir_eq_enable_title">啟用 FIR 等化器</string>
+    <string name="fir_eq_enable_summary">15 段線性相位等化器</string>
+    <string name="fir_eq_flat">平坦</string>
+    <string name="fir_eq_plus_db">+20 dB</string>
+    <string name="fir_eq_minus_db">-20 dB</string>
+    <!-- Multiband screen -->
+    <string name="mcomp_screen_title">多頻段壓縮器</string>
+    <string name="mcomp_category">多頻段壓縮器</string>
+    <string name="mcomp_enable_title">啟用多頻段壓縮器</string>
+    <string name="mcomp_enable_summary">各頻段動態範圍控制</string>
+    <string name="mcomp_threshold_title">閾值</string>
+    <string name="mcomp_threshold_summary">壓縮啟動閾值</string>
+    <string name="mcomp_ratio_title">壓縮比</string>
+    <string name="mcomp_ratio_summary">壓縮比例</string>
+    <string name="mcomp_makeup_title">補償增益</string>
+    <string name="mcomp_makeup_summary">壓縮後增益</string>
+    <string name="mcomp_band_low">低</string>
+    <string name="mcomp_band_low_mid">低頻</string>
+    <string name="mcomp_band_high_mid">中高頻</string>
+    <string name="mcomp_band_high">高</string>
+    <string name="mcomp_range_low">&lt; 200 Hz</string>
+    <string name="mcomp_range_low_mid">200 - 1000 Hz</string>
+    <string name="mcomp_range_high_mid">1000 - 5000 Hz</string>
+    <string name="mcomp_range_high">&gt; 5000 Hz</string>
+    <!-- Exciter screen -->
+    <string name="exciter_screen_title">激勵器</string>
+    <string name="exciter_category">諧波激勵器</string>
+    <string name="exciter_enable_title">啟用激勵器</string>
+    <string name="exciter_enable_summary">增添泛音臨場感與清晰度</string>
+    <string name="exciter_drive_title">驅動量</string>
+    <string name="exciter_drive_summary">諧波飽和強度</string>
+    <string name="exciter_blend_title">混合比例</string>
+    <string name="exciter_blend_summary">諧波混音比例</string>
+    <string name="exciter_freq_title">頻率</string>
+    <string name="exciter_freq_summary">諧波生成截止頻率</string>
+    <!-- Convolver screen -->
+    <string name="convolver_screen_title">卷積器</string>
+    <string name="convolver_category">脈衝響應卷積器</string>
+    <string name="convolver_enable_title">啟用卷積器</string>
+    <string name="convolver_enable_summary">套用脈衝響應濾波器</string>
+    <string name="convolver_load_ir">載入 IR 檔案</string>
+    <string name="convolver_no_ir">未載入脈衝響應</string>
+    <string name="convolver_mix_title">混音比例</string>
+    <string name="convolver_mix_summary">效果/原音平衡</string>
+    <string name="convolver_formats">支援格式：WAV（16/24/32-bit PCM、32-bit float）</string>
+    <!-- Presets screen -->
+    <string name="presets_screen_title">音效預設集</string>
+    <string name="presets_save">儲存預設集</string>
+    <string name="presets_empty">尚未儲存任何預設集</string>
+    <string name="preset_loaded">已載入：%1$s</string>
+    <string name="presets_builtin_title">快速預設集</string>
+    <string name="presets_saved_title">已儲存的預設集</string>
+    <string name="presets_tap_to_load">輕觸以載入設定</string>
+    <string name="presets_import">匯入預設集</string>
+    <string name="presets_export">匯出為檔案</string>
+    <string name="presets_share">分享預設集</string>
+    <string name="presets_rename">重新命名預設集</string>
+    <string name="presets_delete">刪除預設集</string>
+    <string name="presets_options">預設集選項</string>
+    <string name="presets_options_title">預設集選項</string>
+    <string name="presets_options_message">請選擇要對此預設集執行的操作</string>
+    <string name="presets_import_success">預設集已匯入</string>
+    <string name="presets_import_failed">匯入失敗：%1$s</string>
+    <string name="presets_export_success">預設集已匯出</string>
+    <string name="presets_export_failed">匯出失敗：%1$s</string>
+    <string name="presets_delete_title">刪除預設集</string>
+    <string name="presets_delete_message">確定要刪除「%1$s」嗎？</string>
+    <string name="presets_rename_title">重新命名預設集</string>
+    <string name="presets_rename_label">預設集名稱</string>
+    <string name="presets_save_title">儲存目前設定</string>
+    <string name="presets_save_label">預設集名稱</string>
+    <string name="presets_save_success">預設集「%1$s」已儲存</string>
+    <string name="presets_confirm_delete">刪除</string>
+    <string name="presets_confirm_rename">重命名</string>
+    <string name="presets_confirm_save">儲存</string>
+    <string name="presets_confirm_cancel">取消</string>
+    <string name="presets_share_subject">AxionFx 預設集：%1$s</string>
+    <string name="presets_share_text">來看看我自訂的 AxionFx 音訊預設集：%1$s！</string>
+    <!-- Notification -->
+    <string name="notification_channel">AxionFx 音訊處理</string>
+    <string name="notification_title">AxionFx</string>
+    <string name="notification_text">音訊處理中</string>
+    <string name="notification_title_idle">AxionFx — 待機中</string>
+    <string name="notification_text_idle">等待媒體播放</string>
+    <!-- Power notice -->
+    <string name="power_notice">音訊處理在播放期間會佔用額外的 CPU 資源。停用未使用的效果可節省電量。</string>
+    <string name="reset_dialog_title">重設所有效果？</string>
+    <string name="reset_dialog_message">此操作將所有音訊效果還原為預設設定。</string>
+    <string name="reset_confirm">重設</string>
+    <string name="reset_cancel">取消</string>
+    <string name="stat_sample_rate">取樣率</string>
+    <string name="stat_buffer_size">緩衝區大小</string>
+    <string name="stat_channels">聲道</string>
+    <string name="stat_bit_depth">位元深度</string>
+    <string name="stat_session">工作階段</string>
+    <string name="stat_latency">延遲</string>
+    <string name="detail_placeholder">選取效果以進行設定</string>
+    <string name="nav_device_profiles">裝置設定檔</string>
+    <string name="nav_device_profiles_summary">各音訊輸出的專屬預設集</string>
+    <string name="device_profiles_title">裝置設定檔</string>
+    <string name="device_profiles_swipe_hint">在輸出裝置間滑動，選取預設集，輕觸套用</string>
+    <string name="device_profiles_unbound">未指定預設集</string>
+    <string name="device_profiles_set_preset">設定預設集</string>
+    <string name="device_profiles_apply">套用</string>
+    <string name="device_profiles_none_bound">請先指定預設集</string>
+    <string name="device_profiles_pick_title">%1$s 的預設集</string>
+    <string name="device_cat_speaker">手機喇叭</string>
+    <string name="device_cat_wired">有線耳機</string>
+    <string name="device_cat_bluetooth">藍牙音訊</string>
+    <string name="device_cat_usb">USB 音訊</string>
+    <string name="device_cat_other">其他輸出</string>
+    <string name="device_profiles_add_title">新增設定檔</string>
+    <string name="device_profiles_add_summary">建立自訂裝置設定檔並綁定至任意預設集</string>
+    <string name="device_profiles_add_button">新增設定檔</string>
+    <string name="device_profiles_add_label">設定檔名稱</string>
+    <string name="device_profiles_add_confirm">建立</string>
+    <string name="device_profiles_add_invalid">名稱無效或重複</string>
+    <string name="device_profiles_delete_title">刪除設定檔？</string>
+    <string name="device_profiles_delete_message">移除「%1$s」及其預設集綁定？</string>
+    <string name="device_profiles_auto_switch_title">自動切換設定檔</string>
+    <string name="device_profiles_auto_switch_summary">音訊輸出切換時自動套用已綁定的預設集</string>
+    <string name="dashboard_device_chip_unbound">未綁定預設集</string>
+</resources>
