@@ -24,12 +24,20 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.util.Log
 import com.android.axion.axionfx.AxionFxActivity
 import com.android.axion.axionfx.R
 import com.android.axion.axionfx.AxionFxController
+import com.android.axion.axionfx.device.DeviceCategory
+import com.android.axion.axionfx.device.DeviceProfile
+import com.android.axion.axionfx.device.DeviceProfileManager
 import com.android.axion.platform.AxPlatformClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +47,23 @@ class AxionFxService : Service() {
 
     private lateinit var prefs: SharedPreferences
     private var mediaOnlyMode = false
+
+    private val routingThread = HandlerThread("AxionFxRouting").apply { start() }
+    private val routingHandler = Handler(routingThread.looper)
+    private val audioManager by lazy { getSystemService(AudioManager::class.java) }
+    private var lastAppliedCategory: DeviceCategory? = null
+
+    private val evalRunnable = Runnable { evaluateRoutingChange() }
+
+    private val deviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>?) {
+            scheduleRoutingEval()
+        }
+
+        override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>?) {
+            scheduleRoutingEval()
+        }
+    }
 
     private val platformListener = object : AxPlatformClient.Listener() {
         override fun onMediaStateChanged(
@@ -71,6 +96,9 @@ class AxionFxService : Service() {
         AxionFxController.attachSession(0)
         restoreSettings()
         setupMediaOnlyMode()
+        _autoSwitchEnabled.value = prefs.getBoolean(KEY_AUTO_SWITCH, true)
+        audioManager?.registerAudioDeviceCallback(deviceCallback, routingHandler)
+        scheduleRoutingEval()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -96,6 +124,9 @@ class AxionFxService : Service() {
 
     override fun onDestroy() {
         instance = null
+        audioManager?.unregisterAudioDeviceCallback(deviceCallback)
+        routingHandler.removeCallbacks(evalRunnable)
+        routingThread.quitSafely()
         AxPlatformClient.getInstance().removeListener(platformListener)
         AxionFxController.releaseAll()
         super.onDestroy()
@@ -114,6 +145,49 @@ class AxionFxService : Service() {
                 updateNotification(false)
             }
         }
+    }
+
+    fun setAutoSwitchEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTO_SWITCH, enabled).apply()
+        _autoSwitchEnabled.value = enabled
+        if (enabled) scheduleRoutingEval()
+    }
+
+    private fun scheduleRoutingEval() {
+        routingHandler.removeCallbacks(evalRunnable)
+        routingHandler.postDelayed(evalRunnable, ROUTING_DEBOUNCE_MS)
+    }
+
+    private fun evaluateRoutingChange() {
+        val routed = DeviceCategory.routedOutput(this)
+        _currentDeviceCategory.value = routed.category
+        _currentDeviceName.value = routed.deviceName
+        if (!_autoSwitchEnabled.value) return
+        if (routed.category == lastAppliedCategory) return
+        val profile = DeviceProfile.Fixed(routed.category)
+        val token = DeviceProfileManager.getBinding(prefs, profile)
+        if (token.isNullOrEmpty()) {
+            lastAppliedCategory = routed.category
+            return
+        }
+        val applied = DeviceProfileManager.applyBinding(this, prefs, profile)
+        if (applied) {
+            restoreSettings()
+            lastAppliedCategory = routed.category
+            _appliedPresetName.value = DeviceProfileManager.displayName(token)
+            Log.d(TAG, "Auto-switched profile for ${routed.category}")
+        }
+    }
+
+    fun applyProfile(profile: DeviceProfile): Boolean {
+        val token = DeviceProfileManager.getBinding(prefs, profile) ?: return false
+        val ok = DeviceProfileManager.applyBinding(this, prefs, profile)
+        if (ok) {
+            restoreSettings()
+            _appliedPresetName.value = DeviceProfileManager.displayName(token)
+            if (profile is DeviceProfile.Fixed) lastAppliedCategory = profile.category
+        }
+        return ok
     }
 
     fun updateMediaOnlyMode(enabled: Boolean) {
@@ -262,12 +336,29 @@ class AxionFxService : Service() {
         const val KEY_SURROUND_ENABLED = "surround_enabled"
         const val KEY_OUTPUT_GAIN = "output_gain"
         const val KEY_MEDIA_ONLY = "media_only_mode"
+        const val KEY_AUTO_SWITCH = "device_profile_auto_switch"
         private const val TAG = "AxionFxService"
+        private const val ROUTING_DEBOUNCE_MS = 250L
 
         private const val ACTION_STOP = "com.android.axion.axionfx.STOP"
         internal var instance: AxionFxService? = null
         private val _mediaPlaying = MutableStateFlow(false)
         val mediaPlayingFlow: StateFlow<Boolean> = _mediaPlaying.asStateFlow()
+        private val _currentDeviceCategory = MutableStateFlow(DeviceCategory.SPEAKER)
+        val currentDeviceCategoryFlow: StateFlow<DeviceCategory> = _currentDeviceCategory.asStateFlow()
+        private val _currentDeviceName = MutableStateFlow<String?>(null)
+        val currentDeviceNameFlow: StateFlow<String?> = _currentDeviceName.asStateFlow()
+        private val _appliedPresetName = MutableStateFlow<String?>(null)
+        val appliedPresetNameFlow: StateFlow<String?> = _appliedPresetName.asStateFlow()
+        private val _autoSwitchEnabled = MutableStateFlow(true)
+        val autoSwitchEnabledFlow: StateFlow<Boolean> = _autoSwitchEnabled.asStateFlow()
+
+        fun primeFromContext(context: Context) {
+            val routed = DeviceCategory.routedOutput(context)
+            _currentDeviceCategory.value = routed.category
+            _currentDeviceName.value = routed.deviceName
+            _autoSwitchEnabled.value = getPrefs(context).getBoolean(KEY_AUTO_SWITCH, true)
+        }
 
         fun start(context: Context) {
             val prefs = getPrefs(context)

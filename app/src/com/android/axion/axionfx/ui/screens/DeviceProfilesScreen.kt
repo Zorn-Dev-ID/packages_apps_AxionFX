@@ -66,6 +66,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -88,6 +90,8 @@ import com.android.axion.axionfx.device.DeviceProfileManager
 import com.android.axion.axionfx.preset.PresetManager
 import com.android.axion.axionfx.service.AxionFxService
 import com.android.axion.axionfx.ui.AxionFxViewModel
+import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.scaffold.AxionScaffold
 import kotlinx.coroutines.launch
 
@@ -188,6 +192,9 @@ fun DeviceProfilesScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
         )
     }
 
+    val autoSwitchEnabled by AxionFxService.autoSwitchEnabledFlow.collectAsState()
+    LaunchedEffect(Unit) { AxionFxService.primeFromContext(context) }
+
     AxionScaffold(title = stringResource(R.string.device_profiles_title), onBackClick = onBackClick) { innerPadding ->
         Column(
             modifier = Modifier
@@ -196,6 +203,27 @@ fun DeviceProfilesScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(8.dp))
+
+            PreferenceGroup(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                item {
+                    SwitchPreference(
+                        title = stringResource(R.string.device_profiles_auto_switch_title),
+                        summary = stringResource(R.string.device_profiles_auto_switch_summary),
+                        checked = autoSwitchEnabled,
+                        onCheckedChange = { enabled ->
+                            val svc = AxionFxService.instance
+                            if (svc != null) {
+                                svc.setAutoSwitchEnabled(enabled)
+                            } else {
+                                prefs.edit().putBoolean(AxionFxService.KEY_AUTO_SWITCH, enabled).apply()
+                                AxionFxService.primeFromContext(context)
+                            }
+                        },
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = stringResource(R.string.device_profiles_swipe_hint),
@@ -223,11 +251,13 @@ fun DeviceProfilesScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
                     ProfileCard(
                         profile = profile,
                         boundName = DeviceProfileManager.displayName(token),
+                        showApply = !autoSwitchEnabled,
                         onPick = { pickerFor = profile },
                         onApply = {
-                            val applied = DeviceProfileManager.applyBinding(context, prefs, profile)
+                            val svc = AxionFxService.instance
+                            val applied = svc?.applyProfile(profile)
+                                ?: DeviceProfileManager.applyBinding(context, prefs, profile)
                             if (applied) {
-                                AxionFxService.instance?.restoreSettings()
                                 val name = DeviceProfileManager.displayName(token) ?: ""
                                 Toast.makeText(
                                     context,
@@ -264,6 +294,7 @@ fun DeviceProfilesScreen(viewModel: AxionFxViewModel, onBackClick: () -> Unit) {
 private fun ProfileCard(
     profile: DeviceProfile,
     boundName: String?,
+    showApply: Boolean,
     onPick: () -> Unit,
     onApply: () -> Unit,
     onRename: (() -> Unit)?,
@@ -350,18 +381,20 @@ private fun ProfileCard(
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(stringResource(R.string.device_profiles_set_preset))
                 }
-                FilledTonalButton(
-                    onClick = onApply,
-                    modifier = Modifier.weight(1f),
-                    enabled = boundName != null,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Text(stringResource(R.string.device_profiles_apply))
+                if (showApply) {
+                    FilledTonalButton(
+                        onClick = onApply,
+                        modifier = Modifier.weight(1f),
+                        enabled = boundName != null,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(stringResource(R.string.device_profiles_apply))
+                    }
                 }
             }
         }
@@ -619,7 +652,7 @@ private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
     )
 }
 
-private fun categoryTitleRes(category: DeviceCategory): Int = when (category) {
+internal fun categoryTitleRes(category: DeviceCategory): Int = when (category) {
     DeviceCategory.SPEAKER -> R.string.device_cat_speaker
     DeviceCategory.WIRED -> R.string.device_cat_wired
     DeviceCategory.BLUETOOTH -> R.string.device_cat_bluetooth
@@ -627,7 +660,7 @@ private fun categoryTitleRes(category: DeviceCategory): Int = when (category) {
     DeviceCategory.OTHER -> R.string.device_cat_other
 }
 
-private fun categoryIcon(category: DeviceCategory): ImageVector = when (category) {
+internal fun categoryIcon(category: DeviceCategory): ImageVector = when (category) {
     DeviceCategory.SPEAKER -> Icons.Rounded.VolumeUp
     DeviceCategory.WIRED -> Icons.Rounded.Headphones
     DeviceCategory.BLUETOOTH -> Icons.Rounded.Bluetooth

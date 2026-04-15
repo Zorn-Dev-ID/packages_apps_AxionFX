@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.LibraryMusic
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.ui.graphics.graphicsLayer
@@ -46,6 +48,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -57,10 +61,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.axion.axionfx.R
 import androidx.compose.ui.platform.LocalContext
 import com.android.axion.axionfx.AxionFxController
+import com.android.axion.axionfx.device.DeviceProfile
+import com.android.axion.axionfx.device.DeviceProfileManager
 import com.android.axion.axionfx.domain.EffectDefaults
 import com.android.axion.axionfx.domain.EffectKeys
 import com.android.axion.axionfx.service.AxionFxService
@@ -121,6 +128,20 @@ fun DashboardScreen(
 
     val activeCount = viewModel.activeEffectCount()
     val isActive = masterEnabled
+
+    LaunchedEffect(Unit) { AxionFxService.primeFromContext(context) }
+    val deviceCategory by AxionFxService.currentDeviceCategoryFlow.collectAsState()
+    val deviceName by AxionFxService.currentDeviceNameFlow.collectAsState()
+    val appliedPresetName by AxionFxService.appliedPresetNameFlow.collectAsState()
+    val boundPresetName = DeviceProfileManager.displayName(
+        DeviceProfileManager.getBinding(
+            viewModel.repo.prefs,
+            DeviceProfile.Fixed(deviceCategory),
+        )
+    )
+    val chipSubtitle = appliedPresetName
+        ?: boundPresetName
+        ?: stringResource(R.string.dashboard_device_chip_unbound)
 
     val motionScheme = MaterialTheme.motionScheme
     val statusColor by animateColorAsState(
@@ -286,6 +307,47 @@ fun DashboardScreen(
                                 )
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(contentColor.copy(alpha = 0.10f))
+                            .clickable { onNavigate("device_profiles") }
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                    ) {
+                        Icon(
+                            imageVector = categoryIcon(deviceCategory),
+                            contentDescription = null,
+                            tint = contentColor,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = deviceName ?: stringResource(categoryTitleRes(deviceCategory)),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = contentColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = chipSubtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = contentColor.copy(alpha = 0.75f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Rounded.ChevronRight,
+                            contentDescription = null,
+                            tint = contentColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp),
+                        )
                     }
 
                     AnimatedVisibility(
